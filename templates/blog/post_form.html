@@ -1,24 +1,51 @@
 {% extends "blog/base.html" %}
-{% load crispy_forms_tags %}
 {% block content %}
-    <div class="content-section">
-        <form method="POST" enctype="multipart/form-data">
-            {% csrf_token %}
-            <fieldset class="form-group">
-                <legend class="border-bottom mb-4">Blog Post</legend>
-                {{ form|crispy }}
-                
-                
-                {% if form.instance.pk and form.instance.image %}
-                    <div class="form-group">
-                        <label>Current Image:</label><br>
-                        <img src="{{ form.instance.image.url }}" alt="Current post image" style="max-width: 300px; height: auto; border-radius: 8px; margin: 10px 0;">
-                    </div>
-                {% endif %}
-            </fieldset>
-            <div class="form-group">
-                <button class="btn btn-outline-info" type="submit">Post</button>
-            </div>
-        </form>
-    </div>
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    
+    <div id="map" style="height: 400px; width: 100%;"></div>
+    
+    <button type="submit">Post Item</button>
+</form>
+
+<div id="map" style="height: 400px; width: 100%; border: 1px solid #ccc; margin-top: 10px;"></div>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places&callback=initMap" async defer></script>
+
+<script>
+    let map;
+    let marker;
+
+    function initMap() {
+      
+        const tbilisi = { lat: 41.7151, lng: 44.8271 };
+        
+        map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 12,
+            center: tbilisi,
+        });
+
+        marker = new google.maps.Marker({
+            map: map,
+            draggable: true 
+        });
+
+       
+        map.addListener("click", (mapsMouseEvent) => {
+            const pos = mapsMouseEvent.latLng;
+            updateLocation(pos);
+        });
+
+        marker.addListener("dragend", () => {
+            updateLocation(marker.getPosition());
+        });
+    }
+
+    function updateLocation(latLng) {
+        marker.setPosition(latLng);
+        document.getElementById("id_latitude").value = latLng.lat().toFixed(6);
+        document.getElementById("id_longitude").value = latLng.lng().toFixed(6);
+    }
+</script>
 {% endblock content %}

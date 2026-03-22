@@ -1,68 +1,111 @@
 {% extends "blog/base.html" %}
 {% block content %}
 
-    {% if request.GET.q %}
-        <div class="mb-4">
-            <h4>Results for <span class="text-primary">"{{ request.GET.q }}"</span></h4>
-            <a href="{% url 'blog-home' %}" class="btn btn-sm btn-outline-secondary">Clear Search</a>
-        </div>
-        {% if not posts %}
-            <div class="alert alert-warning">No items found matching your criteria.</div>
-        {% endif %}
-    {% endif %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     {% for post in posts %}
         <article class="media content-section shadow-sm">
           <img class="rounded-circle article-img" src="{{ post.author.profile.image.url }}">
           <div class="media-body">
-            <div class="article-metadata">
-              <a class="mr-2 font-weight-bold text-info" href="{% url 'user-posts' post.author.username %}">{{ post.author }}</a>
-              <small class="text-muted">{{ post.date_posted|date:"F d, Y" }}</small>
+            <div class="article-metadata d-flex justify-content-between align-items-center">
+              <div>
+                <a class="mr-2 font-weight-bold text-info" href="{% url 'user-posts' post.author.username %}">{{ post.author }}</a>
+                <small class="text-muted">{{ post.date_posted|date:"M d, Y" }}</small>
+              </div>
+              <small class="text-muted">
+                <i class="fas fa-map-marker-alt text-danger"></i> 
+                {{ post.author.profile.address|default:"Location Hidden" }}
+              </small>
             </div>
+            
             <h2><a class="article-title" href="{% url 'post-detail' post.id %}">{{ post.title }}</a></h2>
             
             {% if post.image %}
-              <div class="post-image-container mb-3">
-                <img src="{{ post.image.url }}" alt="{{ post.title }}" class="img-fluid rounded border">
+              <div class="mb-3 text-center">
+                <img src="{{ post.image.url }}" class="img-fluid rounded border" style="max-height: 350px;">
               </div>
             {% endif %}
             
-            <p class="article-content">{{ post.content|truncatewords:30 }}</p>
+            <div id="map-{{ post.id }}" class="mb-3 border rounded shadow-sm" style="height: 250px; display: none; width: 100%;"></div>
+
+            <p class="article-content text-secondary">{{ post.content|truncatewords:20 }}</p>
             
-            <div class="mt-3 d-flex align-items-center">
-                {% if post.author != user %}
-                  <a class="btn btn-success px-4 mr-3" href="{% url 'post-detail' post.id %}">Buy Now</a>
-                {% else %}
-                  <a class="btn btn-outline-info px-4 mr-3" href="{% url 'post-detail' post.id %}">View Details</a>
-                {% endif %}
+            <hr>
+            <div class="d-flex align-items-center justify-content-between flex-wrap">
+                <div class="btn-group mb-2">
+                    {% if post.author != user %}
+                        <a class="btn btn-success btn-sm px-3" href="{% url 'buy-now' post.id %}">Buy Now</a>
+                        <a class="btn btn-outline-info btn-sm" href="{% url 'chat-view' post.id post.author.id %}">Message</a>
+                        
+                        <button class="btn btn-outline-secondary btn-sm" 
+                                onclick="togglePostMap('{{ post.id }}', '{{ post.author.profile.latitude|safe }}', '{{ post.author.profile.longitude|safe }}')">
+                            📍 Map
+                        </button>
+
+                        <button class="btn btn-outline-secondary btn-sm" 
+                                onclick="revealNumber(this, '{{ post.author.profile.phone_number|safe }}')">
+                            Show Number
+                        </button>
+                    {% else %}
+                        <a class="btn btn-outline-info btn-sm px-4" href="{% url 'post-detail' post.id %}">Manage My Post</a>
+                    {% endif %}
+                </div>
 
                 {% if post.price > 0 %}
-                  <span class="price-next-to-button">${{ post.price }}</span>
+                  <span class="font-weight-bold text-success h5 mb-0">${{ post.price }}</span>
                 {% endif %}
             </div>
           </div>
         </article>
     {% endfor %}
+
+<script>
+
+function revealNumber(btn, num) {
+
+    if (!num || num === 'None' || num === '' || num === 'null') {
+        btn.innerText = "No Number Set";
+        btn.classList.replace('btn-outline-secondary', 'btn-danger');
+        btn.disabled = true;
+    } else {
+        btn.outerHTML = `<a href="tel:${num}" class="btn btn-success btn-sm font-weight-bold shadow-sm">📞 ${num}</a>`;
+    }
+}
+
+const postMaps = {};
+
+function togglePostMap(id, latStr, lngStr) {
+    const el = document.getElementById(`map-${id}`);
     
-    {% if is_paginated %}
-      <div class="pagination-container mt-4">
-          {% if page_obj.has_previous %}
-            <a class="btn btn-outline-info mb-4" href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">First</a>
-            <a class="btn btn-outline-info mb-4" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Previous</a>
-          {% endif %}
 
-          {% for num in page_obj.paginator.page_range %}
-            {% if page_obj.number == num %}
-              <a class="btn btn-info mb-4" href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">{{ num }}</a>
-            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-              <a class="btn btn-outline-info mb-4" href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">{{ num }}</a>
-            {% endif %}
-          {% endfor %}
+    const lat = parseFloat(latStr);
+    const lng = parseFloat(lngStr);
 
-          {% if page_obj.has_next %}
-            <a class="btn btn-outline-info mb-4" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Next</a>
-            <a class="btn btn-outline-info mb-4" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Last</a>
-          {% endif %}
-      </div>
-    {% endif %}
+    if (isNaN(lat) || isNaN(lng)) {
+        alert("This seller hasn't set a map location yet.");
+        return;
+    }
+
+    if (el.style.display === 'none') {
+        el.style.display = 'block';
+        
+
+        if (!postMaps[id]) {
+            postMaps[id] = L.map(`map-${id}`).setView([lat, lng], 14);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(postMaps[id]);
+            L.marker([lat, lng]).addTo(postMaps[id]);
+        }
+        
+        setTimeout(() => {
+            postMaps[id].invalidateSize();
+        }, 200);
+
+    } else {
+        el.style.display = 'none';
+    }
+}
+</script>
 {% endblock content %}

@@ -1,35 +1,51 @@
+import stripe
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from .models import Post, Order, CartItem
-from users.models import Message, Comment
 from django.contrib import messages
 from django.db.models import Q
+from django.urls import reverse
+from rest_framework import generics, permissions, status
+from rest_framework.response import Response
+from rest_framework.decorators import api_view, permission_classes
+from .forms import PostForm
+from .models import Post, Order, CartItem
+from users.models import Message, Comment
+from .serializers import PostSerializer, OrderSerializer, MessageSerializer, CommentSerializer
+
+stripe.api_key = "sk_test_51TDozP43m2rBq24YzO5SM6RBrPbvP0AOFQzwJNnnMjsTxTA7uzU7M1aplFvraPUfMgZSEKvKZYjkxwwiqIJUQZx300dEx3wLqe"
 
 def home(request):
-    context = {
-        'posts': Post.objects.all()
-    }
-    return render(request, 'blog/home.html', context)
+    posts = Post.objects.filter(is_sold=False).select_related('author__profile').order_by('-date_posted')
+    return render(request, 'blog/home.html', {'posts': posts})
 
 class PostListView(ListView):
     model = Post
     template_name = 'blog/home.html'
     context_object_name = 'posts'
-    ordering = ['-date_posted']
     paginate_by = 5
+
+    def get_queryset(self):
+        query = self.request.GET.get('q')
+        queryset = Post.objects.filter(is_sold=False).select_related('author__profile')
+        if query:
+            queryset = queryset.filter(
+                Q(title__icontains=query) | 
+                Q(content__icontains=query) |
+                Q(author__username__icontains=query)
+            ).distinct()
+        return queryset.order_by('-date_posted')
 
 class UserPostListView(ListView):
     model = Post
     template_name = 'blog/user_posts.html'
     context_object_name = 'posts'
     paginate_by = 5
-
     def get_queryset(self):
         user = get_object_or_404(User, username=self.kwargs.get('username'))
-        return Post.objects.filter(author=user).order_by('-date_posted')
+        return Post.objects.filter(author=user).select_related('author__profile').order_by('-date_posted')
 
 class PostDetailView(DetailView):
     model = Post
@@ -40,8 +56,9 @@ class PostDetailView(DetailView):
 
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
-    fields = ['title', 'content', 'image', 'price']
-
+    form_class = PostForm 
+    template_name = 'blog/post_form.html'
+    
     def form_valid(self, form):
         form.instance.author = self.request.user
         return super().form_valid(form)
@@ -49,67 +66,73 @@ class PostCreateView(LoginRequiredMixin, CreateView):
 class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Post
     fields = ['title', 'content', 'image', 'price']
-
     def form_valid(self, form):
-        if not form.cleaned_data.get('image'):
-            form.instance.image = self.get_object().image
         form.instance.author = self.request.user
         return super().form_valid(form)
-
     def test_func(self):
-        post = self.get_object()
-        return self.request.user == post.author
+        return self.request.user == self.get_object().author
 
 class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Post
     success_url = '/'
-
     def test_func(self):
-        post = self.get_object()
-        return self.request.user == post.author
+        return self.request.user == self.get_object().author
 
 def about(request):
     return render(request, 'blog/about.html', {'title': 'About'})
 
 @login_required
-def buy_post(request, pk):
+def create_checkout_session(request, pk):
     post = get_object_or_404(Post, pk=pk)
-    if request.method == 'POST':
-        payment_method = request.POST.get('payment_method')
-        if not payment_method:
-            return redirect('post-detail', pk=pk)
-        order = Order.objects.create(
+    if post.price < 0.50:
+        messages.error(request, "Price must be at least $0.50 to use card payment.")
+        return redirect('post-detail', pk=pk)
+    if post.is_sold:
+        messages.error(request, "This item has already been sold.")
+        return redirect('blog-home')
+    try:
+        session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=[{
+                'price_data': {
+                    'currency': 'usd',
+                    'product_data': {'name': post.title},
+                    'unit_amount': int(post.price * 100), 
+                },
+                'quantity': 1,
+            }],
+            mode='payment',
+            success_url=request.build_absolute_uri(reverse('payment-success', args=[post.id])),
+            cancel_url=request.build_absolute_uri(post.get_absolute_url()),
+        )
+        Order.objects.create(
             buyer=request.user,
             post=post,
             amount=post.price,
-            payment_method=payment_method,
+            stripe_session_id=session.id,
             status='pending'
         )
-        return redirect('payment-success', order_id=order.id)
-    return redirect('post-detail', pk=pk)
+        return redirect(session.url, code=303)
+    except Exception as e:
+        messages.error(request, f"Payment error: {str(e)}")
+        return redirect('post-detail', pk=pk)
 
-def payment_success(request, order_id):
-    order = get_object_or_404(Order, id=order_id)
-    context = {
-        'order': order,
-        'payment_method': order.get_payment_method_display()
-    }
-    return render(request, 'blog/payment_success.html', context)
-
-def my_purchases(request):
-    if not request.user.is_authenticated:
-        return redirect('login')
-    orders = Order.objects.filter(buyer=request.user)
-    context = {'orders': orders}
-    return render(request, 'blog/my_purchases.html', context)
+@login_required
+def payment_success(request, pk):
+    post = get_object_or_404(Post, pk=pk)
+    post.is_sold = True
+    post.save()
+    Order.objects.filter(post=post, buyer=request.user).update(status='completed')
+    messages.success(request, f"Payment successful! You bought {post.title}.")
+    return render(request, 'blog/payment_success.html', {'post': post})
 
 @login_required
 def add_to_cart(request, pk):
     post = get_object_or_404(Post, pk=pk)
-    cart_item, created = CartItem.objects.get_or_create(user=request.user, post=post)
+    item, created = CartItem.objects.get_or_create(user=request.user, post=post)
     if not created:
-        cart_item.quantity += 1
-        cart_item.save()
+        item.quantity += 1
+        item.save()
     return redirect('cart-detail')
 
 @login_required
@@ -120,104 +143,51 @@ def cart_detail(request):
 
 @login_required
 def remove_from_cart(request, pk):
-    item = get_object_or_404(CartItem, pk=pk, user=request.user)
-    item.delete()
+    get_object_or_404(CartItem, pk=pk, user=request.user).delete()
     return redirect('cart-detail')
-
-@login_required
-def checkout(request):
-    cart_items = CartItem.objects.filter(user=request.user)
-    if request.method == 'POST' and cart_items.exists():
-        payment_method = request.POST.get('payment_method')
-        for item in cart_items:
-            Order.objects.create(
-                buyer=request.user,
-                post=item.post,
-                amount=item.get_total_price(),
-                payment_method=payment_method,
-                status='pending'
-            )
-        cart_items.delete()
-        return redirect('my-purchases')
-    return render(request, 'blog/checkout.html', {'items': cart_items})
-
-def user_profile(request, username):
-    user = get_object_or_404(User, username=username)
-    posts = Post.objects.filter(author=user).order_by('-date_posted')
-    return render(request, 'blog/user_posts.html', {'seller': user, 'posts': posts})
-
-@login_required
-def inbox(request):
-    user_messages = Message.objects.filter(
-        Q(receiver=request.user) | Q(sender=request.user)
-    ).select_related('sender', 'receiver', 'post').order_by('-timestamp')
-    received_requests = Message.objects.filter(receiver=request.user).order_by('-timestamp')
-    return render(request, 'blog/inbox.html', {'messages': received_requests})
-
-@login_required
-def send_negotiation(request, receiver_id):
-    if request.method == 'POST':
-        receiver = User.objects.get(id=receiver_id)
-        post_id = request.POST.get('post_id')
-        post = Post.objects.get(id=post_id)
-        content = request.POST.get('content')
-        Message.objects.create(
-            sender=request.user,
-            receiver=receiver,
-            post=post,
-            content=content
-        )
-        messages.success(request, f'Negotiation request sent to {receiver.username}!')
-        return redirect('post-detail', pk=post_id)
-
-@login_required
-def add_comment(request, pk):
-    post = get_object_or_404(Post, pk=pk)
-    if request.method == 'POST':
-        content = request.POST.get('content')
-        Comment.objects.create(post=post, author=request.user, content=content)
-        messages.success(request, 'Comment added!')
-    return redirect('post-detail', pk=pk)
 
 @login_required
 def chat_view(request, post_id, user_id):
     other_user = get_object_or_404(User, id=user_id)
     post = get_object_or_404(Post, id=post_id)
-    chat_messages = Message.objects.filter(
-        post=post
-    ).filter(
-        (Q(sender=request.user) & Q(receiver=other_user)) |
-        (Q(sender=other_user) & Q(receiver=request.user))
+    chat_messages = Message.objects.filter(post=post).filter(
+        (Q(sender=request.user) & Q(receiver=other_user)) | (Q(sender=other_user) & Q(receiver=request.user))
     ).order_by('timestamp')
     if request.method == 'POST':
         content = request.POST.get('content')
-        if content:
-            Message.objects.create(
-                sender=request.user,
-                receiver=other_user,
-                post=post,
-                content=content
-            )
+        if content: Message.objects.create(sender=request.user, receiver=other_user, post=post, content=content)
         return redirect('chat-view', post_id=post.id, user_id=other_user.id)
-    return render(request, 'blog/chat.html', {
-        'chat_messages': chat_messages,
-        'other_user': other_user,
-        'post': post
-    })
+    return render(request, 'blog/chat.html', {'chat_messages': chat_messages, 'other_user': other_user, 'post': post})
 
-class PostListView(ListView):
-    model = Post
-    template_name = 'blog/home.html'
-    context_object_name = 'posts'
-    ordering = ['-date_posted']
-    paginate_by = 5
+class PostListAPIView(generics.ListCreateAPIView):
+    queryset = Post.objects.filter(is_sold=False).order_by('-date_posted')
+    serializer_class = PostSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    def perform_create(self, serializer): serializer.save(author=self.request.user)
 
-    def get_queryset(self):
-        query = self.request.GET.get('q')
-        if query:
-            return Post.objects.filter(
-                Q(title__icontains=query) | 
-                Q(content__icontains=query) |
-                Q(author__username__icontains=query)
-            ).distinct().order_by('-date_posted')
-        return Post.objects.all().order_by('-date_posted')
+class PostDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+class CommentListAPIView(generics.ListCreateAPIView):
+    serializer_class = CommentSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    def get_queryset(self): return Comment.objects.filter(post_id=self.kwargs['pk'])
+    def perform_create(self, serializer): serializer.save(author=self.request.user)
+
+def my_purchases(request):
+    orders = Order.objects.filter(buyer=request.user)
+    return render(request, 'blog/my_purchases.html', {'orders': orders})
+
+@login_required
+def inbox(request):
+    msgs = Message.objects.filter(receiver=request.user).order_by('-timestamp')
+    return render(request, 'blog/inbox.html', {'messages': msgs})
+
+@login_required
+def add_comment(request, pk):
+    post = get_object_or_404(Post, pk=pk)
+    if request.method == 'POST':
+        Comment.objects.create(post=post, author=request.user, content=request.POST.get('content'))
+    return redirect('post-detail', pk=pk)

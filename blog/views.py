@@ -14,8 +14,8 @@ from .forms import PostForm
 from .models import Post, Order, CartItem
 from users.models import Message, Comment
 from .serializers import PostSerializer, OrderSerializer, MessageSerializer, CommentSerializer
-
-stripe.api_key = "sk_test_51TDozP43m2rBq24YzO5SM6RBrPbvP0AOFQzwJNnnMjsTxTA7uzU7M1aplFvraPUfMgZSEKvKZYjkxwwiqIJUQZx300dEx3wLqe"
+import os
+API_KEY = os.getenv("STRIPE_API_KEY")
 
 def home(request):
     posts = Post.objects.filter(is_sold=False).select_related('author__profile').order_by('-date_posted')

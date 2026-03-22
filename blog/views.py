@@ -15,8 +15,12 @@ from .models import Post, Order, CartItem
 from users.models import Message, Comment
 from .serializers import PostSerializer, OrderSerializer, MessageSerializer, CommentSerializer
 import os
-API_KEY = os.getenv("STRIPE_API_KEY")
+import stripe
+from dotenv import load_dotenv
 
+load_dotenv()  
+
+stripe.api_key = os.getenv("STRIPE_API_KEY")
 def home(request):
     posts = Post.objects.filter(is_sold=False).select_related('author__profile').order_by('-date_posted')
     return render(request, 'blog/home.html', {'posts': posts})

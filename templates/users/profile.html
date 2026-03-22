@@ -1,63 +1,55 @@
 {% extends "blog/base.html" %}
 {% load crispy_forms_tags %}
 {% block content %}
-<div class="content-section">
-    <div class="media border-bottom pb-3 mb-3">
+    <div class="content-section">
+      <div class="media border-bottom pb-3 mb-3">
         <img class="rounded-circle account-img" src="{{ user.profile.image.url }}" style="width: 125px; height: 125px;">
         <div class="media-body ml-4">
-            <h2 class="account-heading">{{ user.username }}</h2>
-            <p class="text-secondary">{{ user.email }}</p>
+          <h2 class="account-heading">{{ user.username }}</h2>
+          <p class="text-secondary">{{ user.email }}</p>
         </div>
+      </div>
+
+      <form method="POST" enctype="multipart/form-data">
+          {% csrf_token %}
+          <fieldset class="form-group">
+              <legend class="border-bottom mb-4">Profile Settings</legend>
+              
+              {{ u_form|crispy }}
+              
+              <hr>
+              {{ p_form.image|as_crispy_field }}
+              {{ p_form.phone_number|as_crispy_field }}
+              {{ p_form.address|as_crispy_field }}
+
+              <label class="font-weight-bold">Pin your location on the map:</label>
+              <div id="map" class="mb-3 border rounded" style="height: 300px; width: 100%;"></div>
+              
+              <div class="row">
+                  <div class="col-6">{{ p_form.latitude|as_crispy_field }}</div>
+                  <div class="col-6">{{ p_form.longitude|as_crispy_field }}</div>
+              </div>
+          </fieldset>
+          
+          <div class="form-group d-flex justify-content-between align-items-center">
+              <button class="btn btn-info px-4" type="submit">Save Changes</button>
+              
+              <button form="logout-form" type="submit" class="btn btn-outline-danger btn-sm">Logout</button>
+          </div>
+      </form>
+
+      <form id="logout-form" method="POST" action="{% url 'logout' %}" style="display:none;">
+          {% csrf_token %}
+      </form>
     </div>
-
-    <form method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-        <fieldset class="form-group">
-            <legend class="border-bottom mb-4">Profile Settings</legend>
-
-            {{ u_form|crispy }}
-
-            <hr>
-            {{ p_form.image|as_crispy_field }}
-            {{ p_form.phone_number|as_crispy_field }}
-            {{ p_form.address|as_crispy_field }}
-
-            <label class="font-weight-bold">Pin your location on the map:</label>
-            <div id="map" class="mb-3 border rounded" style="height: 300px; width: 100%;"></div>
-
-            <div class="row">
-                <div class="col-6">{{ p_form.latitude|as_crispy_field }}</div>
-                <div class="col-6">{{ p_form.longitude|as_crispy_field }}</div>
-            </div>
-        </fieldset>
-
-        <div class="form-group d-flex justify-content-between align-items-center">
-            <button class="btn btn-info px-4" type="submit">Save Changes</button>
-            <button form="logout-form" type="submit" class="btn btn-outline-danger btn-sm">Logout</button>
-        </div>
-    </form>
-
-    <form id="logout-form" method="POST" action="{% url 'logout' %}" style="display:none;">
-        {% csrf_token %}
-    </form>
-</div>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-    // Default coordinates (Tbilisi)
-    const DEFAULT_LAT = 41.7151;
-    const DEFAULT_LNG = 44.8271;
-
-    // Load user's coordinates or fallback to default
-    let lat = {{ user.profile.latitude|default_if_none:"null" }};
-    let lng = {{ user.profile.longitude|default_if_none:"null" }};
-
-    if(lat === null || lng === null){
-        lat = DEFAULT_LAT;
-        lng = DEFAULT_LNG;
-    }
+    // Initialize coordinates from profile or default to Tbilisi
+    let lat = {{ user.profile.latitude|default:41.7151 }};
+    let lng = {{ user.profile.longitude|default:44.8271 }};
 
     const map = L.map('map').setView([lat, lng], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -69,14 +61,11 @@
     function updateCoords(lat, lng) {
         const latInput = document.getElementById('id_latitude');
         const lngInput = document.getElementById('id_longitude');
-        if(latInput && lngInput){
+        if(latInput && lngInput) {
             latInput.value = lat.toFixed(6);
             lngInput.value = lng.toFixed(6);
         }
     }
-
-    // Initialize input values
-    updateCoords(lat, lng);
 
     // Drag marker logic
     marker.on('dragend', function(e) {

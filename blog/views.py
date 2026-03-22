@@ -1,4 +1,6 @@
+import os
 import stripe
+from dotenv import load_dotenv
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import login_required
@@ -8,19 +10,17 @@ from django.contrib import messages
 from django.db.models import Q
 from django.urls import reverse
 from rest_framework import generics, permissions, status
-from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
+
 from .forms import PostForm
 from .models import Post, Order, CartItem
 from users.models import Message, Comment
 from .serializers import PostSerializer, OrderSerializer, MessageSerializer, CommentSerializer
-import os
-import stripe
-from dotenv import load_dotenv
 
-load_dotenv()  
-
+load_dotenv()
 stripe.api_key = os.getenv("STRIPE_API_KEY")
+
+# --- BLOG VIEWS ---
+
 def home(request):
     posts = Post.objects.filter(is_sold=False).select_related('author__profile').order_by('-date_posted')
     return render(request, 'blog/home.html', {'posts': posts})
@@ -82,8 +82,7 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     def test_func(self):
         return self.request.user == self.get_object().author
 
-def about(request):
-    return render(request, 'blog/about.html', {'title': 'About'})
+# --- STRIPE / PAYMENT VIEWS ---
 
 @login_required
 def create_checkout_session(request, pk):
@@ -130,6 +129,8 @@ def payment_success(request, pk):
     messages.success(request, f"Payment successful! You bought {post.title}.")
     return render(request, 'blog/payment_success.html', {'post': post})
 
+# --- CART VIEWS ---
+
 @login_required
 def add_to_cart(request, pk):
     post = get_object_or_404(Post, pk=pk)
@@ -150,6 +151,8 @@ def remove_from_cart(request, pk):
     get_object_or_404(CartItem, pk=pk, user=request.user).delete()
     return redirect('cart-detail')
 
+# --- OTHER VIEWS ---
+
 @login_required
 def chat_view(request, post_id, user_id):
     other_user = get_object_or_404(User, id=user_id)
@@ -159,26 +162,10 @@ def chat_view(request, post_id, user_id):
     ).order_by('timestamp')
     if request.method == 'POST':
         content = request.POST.get('content')
-        if content: Message.objects.create(sender=request.user, receiver=other_user, post=post, content=content)
+        if content: 
+            Message.objects.create(sender=request.user, receiver=other_user, post=post, content=content)
         return redirect('chat-view', post_id=post.id, user_id=other_user.id)
     return render(request, 'blog/chat.html', {'chat_messages': chat_messages, 'other_user': other_user, 'post': post})
-
-class PostListAPIView(generics.ListCreateAPIView):
-    queryset = Post.objects.filter(is_sold=False).order_by('-date_posted')
-    serializer_class = PostSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    def perform_create(self, serializer): serializer.save(author=self.request.user)
-
-class PostDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Post.objects.all()
-    serializer_class = PostSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-
-class CommentListAPIView(generics.ListCreateAPIView):
-    serializer_class = CommentSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    def get_queryset(self): return Comment.objects.filter(post_id=self.kwargs['pk'])
-    def perform_create(self, serializer): serializer.save(author=self.request.user)
 
 def my_purchases(request):
     orders = Order.objects.filter(buyer=request.user)
@@ -195,3 +182,6 @@ def add_comment(request, pk):
     if request.method == 'POST':
         Comment.objects.create(post=post, author=request.user, content=request.POST.get('content'))
     return redirect('post-detail', pk=pk)
+
+def about(request):
+    return render(request, 'blog/about.html', {'title': 'About'})

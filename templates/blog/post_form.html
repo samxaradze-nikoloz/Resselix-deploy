@@ -1,51 +1,23 @@
 {% extends "blog/base.html" %}
 {% block content %}
-<form method="POST" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p }}
-    
-    <div id="map" style="height: 400px; width: 100%;"></div>
-    
-    <button type="submit">Post Item</button>
-</form>
 
-<div id="map" style="height: 400px; width: 100%; border: 1px solid #ccc; margin-top: 10px;"></div>
+<div class="content-section">
+    <h2 class="mb-3">Create New Post</h2>
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.title.label_tag }} {{ form.title }}
+        {{ form.content.label_tag }} {{ form.content }}
+        {{ form.price.label_tag }} {{ form.price }}
 
-<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places&callback=initMap" async defer></script>
+        {{ form.address.label_tag }} {{ form.address }}
+        {{ form.latitude }}
+        {{ form.longitude }}
 
-<script>
-    let map;
-    let marker;
+        <h5 class="mt-3">Upload Images:</h5>
+        <input type="file" name="images" multiple class="form-control mb-3">
 
-    function initMap() {
-      
-        const tbilisi = { lat: 41.7151, lng: 44.8271 };
-        
-        map = new google.maps.Map(document.getElementById("map"), {
-            zoom: 12,
-            center: tbilisi,
-        });
+        <button type="submit" class="btn btn-success mt-3">Post Item</button>
+    </form>
+</div>
 
-        marker = new google.maps.Marker({
-            map: map,
-            draggable: true 
-        });
-
-       
-        map.addListener("click", (mapsMouseEvent) => {
-            const pos = mapsMouseEvent.latLng;
-            updateLocation(pos);
-        });
-
-        marker.addListener("dragend", () => {
-            updateLocation(marker.getPosition());
-        });
-    }
-
-    function updateLocation(latLng) {
-        marker.setPosition(latLng);
-        document.getElementById("id_latitude").value = latLng.lat().toFixed(6);
-        document.getElementById("id_longitude").value = latLng.lng().toFixed(6);
-    }
-</script>
 {% endblock content %}

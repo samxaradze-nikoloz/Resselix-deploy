@@ -1,69 +1,81 @@
 {% extends "blog/base.html" %}
 {% block content %}
+
 <article class="media content-section">
   <img class="rounded-circle article-img" src="{{ object.author.profile.image.url }}">
   <div class="media-body">
-    <div class="article-metadata">
-    
-      <a class="mr-2" href="{% url 'user-posts' object.author.username %}">{{ object.author }}</a>
-      <small class="text-muted">{{ object.date_posted|date:"F d, Y" }}</small>
-      
+    <div class="article-metadata d-flex justify-content-between align-items-center">
+      <div>
+        <a class="mr-2 font-weight-bold text-info" href="{% url 'user-posts' object.author.username %}">{{ object.author }}</a>
+        <small class="text-muted">{{ object.date_posted|date:"F d, Y" }}</small>
+      </div>
+
       {% if object.author == user %}
-        <div>
-          <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'post-update' object.id %}">Update</a>
-          <a class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'post-delete' object.id %}">Delete</a>
-        </div>
+      <div>
+        <a class="btn btn-secondary btn-sm" href="{% url 'post-update' object.id %}">Update</a>
+        <a class="btn btn-danger btn-sm" href="{% url 'post-delete' object.id %}">Delete</a>
+      </div>
       {% endif %}
     </div>
+
     <h2 class="article-title">{{ object.title }}</h2>
-    
+
     {% if object.image %}
-      <img src="{{ object.image.url }}" alt="{{ object.title }}" class="img-fluid mb-3" style="max-width: 100%; height: auto; border-radius: 8px;">
+      <img src="{{ object.image.url }}" alt="{{ object.title }}" class="img-fluid mb-3 rounded" style="max-width:100%; height:auto;">
     {% endif %}
-    
-    {% if object.price > 0 %}
-      <div class="price-section mb-3">
-        <h4 class="price-tag">
-          ${{ object.price }}
-        </h4>
-        
-        {% if object.author != user %}
-          {% if user.is_authenticated %}
-            <div class="d-flex flex-wrap gap-2 align-items-center">
-              <a href="{% url 'add-to-cart' object.id %}" class="btn btn-primary btn-lg mb-2">
-                Add to Cart
-              </a>
-              <button class="btn btn-success btn-lg mb-2" data-toggle="modal" data-target="#buyModal">
-                Buy Now
-              </button>
 
-              {% if object.author.profile.phone_number %}
-                <a href="tel:{{ object.author.profile.phone_number }}" class="btn btn-warning btn-lg mb-2">
-                   📞 Call Seller
-                </a>
-                
-                <a href="https://wa.me/{{ object.author.profile.phone_number|cut:'+'|cut:' '|cut:'-' }}" 
-                   target="_blank" 
-                   class="btn btn-outline-success btn-lg mb-2">
-                   <i class="fab fa-whatsapp"></i> WhatsApp
-                </a>
-              {% endif %}
+    {% comment %} Display additional images {% endcomment %}
+    {% for img in images %}
+      <img src="{{ img.image.url }}" class="img-fluid mb-2 rounded" style="max-width:100%; height:auto;">
+    {% endfor %}
 
-              <button class="btn btn-outline-info btn-lg mb-2" data-toggle="modal" data-target="#negotiateModal">
-                Negotiate
-              </button>
+    <div class="d-flex flex-wrap align-items-center mb-3 gap-2">
+      {% if object.price > 0 %}
+        <span class="price-tag h4 mb-0">${{ object.price }}</span>
+      {% endif %}
+
+      {% if object.author != user %}
+        {% if user.is_authenticated %}
+          <!-- Three dots menu -->
+          <div class="dropdown">
+            <button class="btn btn-outline-info btn-sm dropdown-toggle" type="button" id="optionsMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              ⋮ Options
+            </button>
+            <div class="dropdown-menu" aria-labelledby="optionsMenu">
+              <a class="dropdown-item" href="{% url 'chat-view' object.id object.author.id %}">Message via App</a>
+              <a class="dropdown-item" href="mailto:{{ object.author.email }}?subject=Regarding your listing '{{ object.title }}'">Message via Gmail</a>
             </div>
-          {% else %}
-            <a href="{% url 'login' %}" class="btn btn-success btn-lg">Login to Buy</a>
+          </div>
+
+          <!-- Phone number -->
+          {% if object.author.profile.phone_number %}
+          <button class="btn btn-outline-secondary btn-sm" 
+                  onclick="revealNumber(this, '{{ object.author.profile.phone_number|safe }}')">
+            Show Number
+          </button>
           {% endif %}
         {% else %}
-          <p class="text-muted"><em>This is your listing</em></p>
+          <a href="{% url 'login' %}" class="btn btn-success btn-sm">Login to Contact</a>
         {% endif %}
-      </div>
-    {% endif %}
-    
-    <p class="article-content">{{ object.content }}</p>
+      {% else %}
+        <p class="text-muted"><em>This is your listing</em></p>
+      {% endif %}
+    </div>
+
+    <p class="article-content text-secondary">{{ object.content }}</p>
   </div>
 </article>
+
+<script>
+  function revealNumber(btn, num) {
+      if (!num || num === 'None' || num === '' || num === 'null') {
+          btn.innerText = "No Number Set";
+          btn.classList.replace('btn-outline-secondary', 'btn-danger');
+          btn.disabled = true;
+      } else {
+          btn.outerHTML = `<a href="tel:${num}" class="btn btn-success btn-sm font-weight-bold shadow-sm">📞 ${num}</a>`;
+      }
+  }
+</script>
 
 {% endblock content %}

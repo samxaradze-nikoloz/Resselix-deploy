@@ -8,7 +8,7 @@ class UserRegisterForm(UserCreationForm):
 
     class Meta:
         model = User
-        fields = ['username', 'email'] # UserCreationForm handles passwords automatically
+        fields = ['username', 'email'] 
 
 class UserUpdateForm(forms.ModelForm):
     email = forms.EmailField()
@@ -20,7 +20,7 @@ class UserUpdateForm(forms.ModelForm):
 class ProfileUpdateForm(forms.ModelForm):
     class Meta:
         model = Profile
-        # CRITICAL: Added address, latitude, and longitude here
+
         fields = ['image', 'phone_number', 'address', 'latitude', 'longitude']
         
         widgets = {
@@ -33,7 +33,7 @@ class ProfileUpdateForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': 'e.g. 123 Street, Tbilisi'
             }),
-            # We keep these as text inputs so the JavaScript can fill them
+
             'latitude': forms.TextInput(attrs={'readonly': 'readonly'}),
             'longitude': forms.TextInput(attrs={'readonly': 'readonly'}),
         }

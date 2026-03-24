@@ -15,7 +15,7 @@ urlpatterns = [
     path('cart/add/<int:pk>/', views.add_to_cart, name='add-to-cart'),
     path('cart/remove/<int:pk>/', views.remove_from_cart, name='remove-from-cart'),
 
-    # MESSAGING & OTHERS
+    # MESSAGING AND OTHERS
     path('chat/<int:post_id>/<int:user_id>/', views.chat_view, name='chat-view'),
     path('inbox/', views.inbox, name='inbox'),
     path('my-purchases/', views.my_purchases, name='my-purchases'),

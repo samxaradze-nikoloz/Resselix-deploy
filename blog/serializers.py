@@ -8,7 +8,7 @@ class PostSerializer(serializers.ModelSerializer):
         model = Post
         fields = ['id', 'title', 'content', 'image', 'price', 'date_posted', 'author']
 
-# Add these if you are using Orders/Messages in the API
+
 class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order

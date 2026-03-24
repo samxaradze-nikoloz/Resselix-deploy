@@ -17,6 +17,6 @@ class PostForm(forms.ModelForm):
 PostImageFormSet = modelformset_factory(
     PostImage,
     fields=('image',),
-    extra=3,  # how many upload fields you want
+    extra=3,  
     widgets={'image': forms.ClearableFileInput()}
 )

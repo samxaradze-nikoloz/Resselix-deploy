@@ -95,14 +95,18 @@ WSGI_APPLICATION = 'blogPost_app.wsgi.application'
 # DATABASE
 # ==============================
 
+# Resselix/settings.py
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "postgres",
+        "USER": "postgres",
+        "PASSWORD": "postgres",
+        "HOST": "db",      # This matches the service name in docker-compose
+        "PORT": 5432,      # Default PostgreSQL port
     }
 }
-
-
 # ==============================
 # PASSWORD VALIDATION
 # ==============================

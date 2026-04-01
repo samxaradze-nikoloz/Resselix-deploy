@@ -12,27 +12,36 @@ from users.models import Message, Comment
 
 # --- BLOG VIEWS ---
 
-def home(request):
-    posts = Post.objects.filter(is_sold=False).select_related('author__profile').order_by('-date_posted')
-    return render(request, 'blog/home.html', {'posts': posts})
+from django.db.models import Q
+
+
+
 
 class PostListView(ListView):
     model = Post
     template_name = 'blog/home.html'
     context_object_name = 'posts'
+    ordering = ['-date_posted']
     paginate_by = 5
 
     def get_queryset(self):
         query = self.request.GET.get('q')
+        # We start by only showing items that are NOT sold
         queryset = Post.objects.filter(is_sold=False).select_related('author__profile')
+        
         if query:
+            # Filter the unsold items by title OR content
             queryset = queryset.filter(
-                Q(title__icontains=query) |
-                Q(content__icontains=query) |
-                Q(author__username__icontains=query)
+                Q(title__icontains=query) | 
+                Q(content__icontains=query)
             ).distinct()
+        
         return queryset.order_by('-date_posted')
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['query'] = self.request.GET.get('q')
+        return context
 class UserPostListView(ListView):
     model = Post
     template_name = 'blog/user_posts.html'

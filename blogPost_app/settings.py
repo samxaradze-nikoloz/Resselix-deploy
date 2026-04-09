@@ -103,7 +103,7 @@ DATABASES = {
         "NAME": "postgres",
         "USER": "postgres",
         "PASSWORD": "postgres",
-        "HOST": "db",      # This matches the service name in docker-compose
+        "HOST": "127.0.0.1",      # This matches the service name in docker-compose
         "PORT": 5432,      # Default PostgreSQL port
     }
 }

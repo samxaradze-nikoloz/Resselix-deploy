@@ -9,13 +9,13 @@
     <div class="row g-4">
         {% for post in posts %}
         <div class="col-md-6 col-lg-4">
-            <div class="card shadow-sm h-100">
+            <div class="card post-card shadow-sm h-100 border border-secondary rounded-3 bg-light">
                 {% if post.images.all %}
                 <div id="carousel-{{ post.id }}" class="carousel slide" data-bs-ride="carousel">
                     <div class="carousel-inner">
                         {% for img in post.images.all %}
                         <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                            <img src="{{ img.image.url }}" class="d-block w-100" style="height:200px; object-fit:contain;">
+                            <img src="{{ img.image.url }}" class="d-block w-100" style="height:200px; object-fit:cover; border-radius:8px;">
                         </div>
                         {% endfor %}
                     </div>
@@ -34,29 +34,32 @@
 
                 <div class="card-body d-flex flex-column">
                     <!-- Title & Author -->
-                    <h5 class="card-title text-warning">
-                        <a href="{% url 'post-detail' post.id %}" class="text-warning text-decoration-none">{{ post.title }}</a>
+                    <h5 class="card-title mb-1">
+                        <a href="{% url 'post-detail' post.id %}" class="post-title-link text-dark text-decoration-none fw-bold">{{ post.title }}</a>
                     </h5>
-                    <p class="mb-1">
-                        <small class="text-muted">By <a href="{% url 'user-posts' post.author.username %}">{{ post.author }}</a> • {{ post.date_posted|date:"M d, Y" }}</small>
+                    <p class="mb-2">
+                        <small class="text-muted">By <a href="{% url 'user-posts' post.author.username %}" class="text-muted">{{ post.author }}</a> • {{ post.date_posted|date:"M d, Y" }}</small>
                     </p>
-                    <p class="card-text">{{ post.content|truncatewords:20 }}</p>
+                    <p class="card-text text-secondary">{{ post.content|truncatewords:20 }}</p>
 
                     {% if post.price > 0 %}
-                    <span class="badge bg-warning text-dark mb-2 fs-6">${{ post.price }}</span>
+                    <span class="badge bg-white border text-dark mb-2 fs-6">${{ post.price }}</span>
                     {% endif %}
 
                     <!-- Buttons -->
-                    <div class="mt-auto d-flex flex-wrap gap-2">
+                    <div class="mt-auto d-flex flex-wrap gap-2 justify-content-between">
                         {% if post.author != user %}
-                        <a href="{% url 'chat-view' post.id post.author.id %}" class="btn btn-outline-info btn-sm">Message</a>
-                        <button class="btn btn-outline-info btn-sm" onclick="togglePostMap('{{ post.id }}', '{{ post.author.profile.latitude|safe }}', '{{ post.author.profile.longitude|safe }}')">📍 Map</button>
-                        <button class="btn btn-outline-info btn-sm" onclick="revealNumber(this, '{{ post.author.profile.phone_number|safe }}')">Show Number</button>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="{% url 'chat-view' post.id post.author.id %}" class="btn btn-outline-primary btn-sm">Message</a>
+                            <button class="btn btn-outline-primary btn-sm" onclick="togglePostMap('{{ post.id }}', '{{ post.author.profile.latitude|default:0 }}', '{{ post.author.profile.longitude|default:0 }}')">📍 Map</button>
+                            <button class="btn btn-outline-primary btn-sm" onclick="revealNumber(this, '{{ post.author.profile.phone_number|default:'' }}')">Show Number</button>
+                        </div>
                         {% else %}
-                        <a href="{% url 'post-detail' post.id %}" class="btn btn-outline-info btn-sm">Manage My Post</a>
+                        <a href="{% url 'post-detail' post.id %}" class="btn btn-outline-secondary btn-sm">Manage My Post</a>
                         {% endif %}
                     </div>
 
+                    <!-- Map -->
                     <div id="map-{{ post.id }}" class="mt-2 border rounded shadow-sm" style="height: 200px; display: none;"></div>
                 </div>
             </div>
@@ -67,24 +70,29 @@
     </div>
 </div>
 
+<!-- Leaflet JS/CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <script>
 function revealNumber(btn, num) {
     if (!num || num === 'None' || num === '' || num === 'null') {
         btn.innerText = "No Number Set";
-        btn.classList.replace('btn-outline-info', 'btn-danger');
+        btn.classList.replace('btn-outline-primary', 'btn-danger');
         btn.disabled = true;
     } else {
-        btn.outerHTML = `<a href="tel:${num}" class="btn btn-info btn-sm fw-bold">📞 ${num}</a>`;
+        btn.outerHTML = `<a href="tel:${num}" class="btn btn-primary btn-sm fw-bold">📞 ${num}</a>`;
     }
 }
 
 const postMaps = {};
+
 function togglePostMap(id, latStr, lngStr) {
     const el = document.getElementById(`map-${id}`);
-    const lat = parseFloat(latStr);
-    const lng = parseFloat(lngStr);
+    const lat = Number(latStr);
+    const lng = Number(lngStr);
 
-    if (isNaN(lat) || isNaN(lng)) {
+    if (!lat || !lng) {
         alert("This seller hasn't set a map location yet.");
         return;
     }
@@ -96,6 +104,7 @@ function togglePostMap(id, latStr, lngStr) {
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap'
             }).addTo(postMaps[id]);
+
             L.marker([lat, lng]).addTo(postMaps[id]);
         }
         setTimeout(() => postMaps[id].invalidateSize(), 200);

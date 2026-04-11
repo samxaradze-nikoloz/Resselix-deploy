@@ -2,106 +2,137 @@
 {% load crispy_forms_tags %}
 {% block content %}
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/css/intlTelInput.min.css"/>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<button class="theme-toggle" id="themeToggle">🌙</button>
 
 <div class="profile-page-container">
 
-  <div class="profile-header-grid mb-4">
-    <div class="image-column">
-      <img class="profile-pic" src="{{ user.profile.image.url }}" alt="Profile Image">
-    </div>
-    <div class="user-info-column">
+  <div class="profile-header-grid">
+    <img class="profile-pic" src="{{ user.profile.image.url }}">
+    <div>
       <h2 class="username-display">{{ user.username }}</h2>
-      <p>{{ user.email }}</p>
+      <p class="muted">{{ user.email }}</p>
     </div>
   </div>
 
-  <div class="settings-card p-4">
+  <div class="settings-card">
+
     <form method="POST" enctype="multipart/form-data" id="profile-form">
       {% csrf_token %}
 
-      <fieldset class="mb-4">
-        <legend class="fw-bold mb-3">User Information</legend>
-        {{ u_form|crispy }}
+      <fieldset>
+        <legend>User Information</legend>
+        {{ u_form.username|as_crispy_field }}
+        {{ u_form.email|as_crispy_field }}
       </fieldset>
 
-      <fieldset class="mb-4">
-        <legend class="fw-bold mb-3">Public Profile Settings</legend>
+      <fieldset>
+        <legend>Profile Settings</legend>
 
-        <div class="mb-3">{{ p_form.image|as_crispy_field }}</div>
+        {{ p_form.image|as_crispy_field }}
 
-        <!-- PHONE INPUT STACKED -->
-        <div class="form-group mb-3 phone-input-vertical">
-          <label for="id_phone_number" class="fw-bold mb-1">Phone Number</label>
-          {{ p_form.phone_number }}
+        <label>Phone Number</label>
+        <div class="phone-box">
+          <div class="phone-prefix">+995</div>
+          <input
+            type="text"
+            id="id_phone_number"
+            name="phone_number"
+            maxlength="11"
+            placeholder="5XX XXX XXX"
+            value="{{ p_form.phone_number.value|default:'' }}"
+          >
         </div>
 
-        <div class="mb-3">{{ p_form.address|as_crispy_field }}</div>
+        {{ p_form.address|as_crispy_field }}
 
-        <label class="fw-bold mb-1">Pin your location on the map:</label>
-        <div id="map" class="mb-3"></div>
+        <label>Location</label>
+        <div id="map"></div>
 
-        <div class="row g-3">
-          <div class="col-6">{{ p_form.latitude|as_crispy_field }}</div>
-          <div class="col-6">{{ p_form.longitude|as_crispy_field }}</div>
-        </div>
+        <input type="hidden" id="id_latitude" name="latitude" value="{{ p_form.latitude.value|default:'' }}">
+        <input type="hidden" id="id_longitude" name="longitude" value="{{ p_form.longitude.value|default:'' }}">
+
       </fieldset>
 
-      <div class="d-flex justify-content-between mt-4 pt-3 border-top">
-        <button class="btn-modern-save" type="submit">Save All Changes</button>
-        <button form="logout-form" type="submit" class="btn-modern-logout">Logout</button>
+      <div class="btn-row">
+        <button class="btn-save" type="submit">Save Changes</button>
+        <button form="logout-form" class="btn-logout" type="submit">Logout</button>
       </div>
-    </form>
-  </div>
 
+    </form>
+
+  </div>
 </div>
 
-<form id="logout-form" method="POST" action="{% url 'logout' %}" style="display:none;">{% csrf_token %}</form>
+<form id="logout-form" method="POST" action="{% url 'logout' %}" style="display:none;">
+  {% csrf_token %}
+</form>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/intlTelInput.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/utils.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-  // PHONE INPUT
-  const phoneInput = document.querySelector("#id_phone_number");
-  const iti = intlTelInput(phoneInput, {
-      initialCountry: "ge",
-      separateDialCode: true,
-      preferredCountries: ["ge","us"],
-      dropdownContainer: document.body,
-      utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/utils.js"
-  });
+const phoneInput = document.getElementById("id_phone_number");
 
-  phoneInput.addEventListener("countrychange", () => { phoneInput.value = ""; });
+function formatPhone(v){
+    let d = v.replace(/\D/g,'').slice(0,9);
+    if(d.length<=3) return d;
+    if(d.length<=6) return d.slice(0,3)+' '+d.slice(3);
+    return d.slice(0,3)+' '+d.slice(3,6)+' '+d.slice(6);
+}
 
-  document.getElementById('profile-form').addEventListener("submit", () => {
-      if (phoneInput.value.trim()) {
-          phoneInput.value = iti.getNumber();
-      }
-  });
+phoneInput.addEventListener("input",(e)=>{
+    e.target.value = formatPhone(e.target.value);
+});
 
-  // LEAFLET MAP
-  let lat = {{ user.profile.latitude|default:41.7151 }};
-  let lng = {{ user.profile.longitude|default:44.8271 }};
-  const map = L.map('map').setView([lat, lng], 13);
+document.getElementById("profile-form").addEventListener("submit",()=>{
+    let d = phoneInput.value.replace(/\D/g,'');
+    if(d.length===9){
+        phoneInput.value="+995"+d;
+    }
+});
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors'
-  }).addTo(map);
+let lat = parseFloat("{{ user.profile.latitude|default:41.7151 }}");
+let lng = parseFloat("{{ user.profile.longitude|default:44.8271 }}");
 
-  let marker = L.marker([lat, lng], {draggable: true}).addTo(map);
+const map = L.map('map').setView([lat, lng], 13);
 
-  function updateCoords(newLat, newLng){
-      document.getElementById('id_latitude').value = newLat.toFixed(6);
-      document.getElementById('id_longitude').value = newLng.toFixed(6);
-  }
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:''
+}).addTo(map);
 
-  marker.on('dragend', e => updateCoords(e.target.getLatLng().lat, e.target.getLatLng().lng));
-  map.on('click', e => { marker.setLatLng(e.latlng); updateCoords(e.latlng.lat, e.latlng.lng); });
-  window.addEventListener("load", () => map.invalidateSize());
-  window.addEventListener("resize", () => map.invalidateSize());
+let marker = L.marker([lat,lng],{draggable:true}).addTo(map);
+
+function update(lat,lng){
+    document.getElementById('id_latitude').value = lat.toFixed(6);
+    document.getElementById('id_longitude').value = lng.toFixed(6);
+}
+
+marker.on('dragend',e=>{
+    let p=e.target.getLatLng();
+    update(p.lat,p.lng);
+});
+
+map.on('click',e=>{
+    marker.setLatLng(e.latlng);
+    update(e.latlng.lat,e.latlng.lng);
+});
+
+setTimeout(()=>map.invalidateSize(),300);
+
+const toggle = document.getElementById("themeToggle");
+
+function setTheme(dark){
+    document.body.classList.toggle("dark",dark);
+    localStorage.setItem("theme",dark?"dark":"light");
+    toggle.textContent = dark?"☀️":"🌙";
+}
+
+toggle.addEventListener("click",()=>{
+    setTheme(!document.body.classList.contains("dark"));
+});
+
+setTheme(localStorage.getItem("theme")==="dark");
 </script>
 
-{% endblock content %}
+{% endblock %}

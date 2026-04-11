@@ -1,117 +1,152 @@
 {% extends "blog/base.html" %}
+{% load static %}
 {% block content %}
 
-{% if query %}
-<p class="text-muted mb-3">Showing results for: <strong>{{ query }}</strong></p>
-{% endif %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<div class="container my-4">
-    <div class="row g-4">
-        {% for post in posts %}
-        <div class="col-md-6 col-lg-4">
-            <div class="card post-card shadow-sm h-100 border border-secondary rounded-3 bg-light">
-                {% if post.images.all %}
-                <div id="carousel-{{ post.id }}" class="carousel slide" data-bs-ride="carousel">
-                    <div class="carousel-inner">
-                        {% for img in post.images.all %}
-                        <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                            <img src="{{ img.image.url }}" class="d-block w-100" style="height:200px; object-fit:cover; border-radius:8px;">
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% if post.images.count > 1 %}
-                    <button class="carousel-control-prev" type="button" data-bs-target="#carousel-{{ post.id }}" data-bs-slide="prev">
-                        <span class="carousel-control-prev-icon"></span>
-                        <span class="visually-hidden">Previous</span>
-                    </button>
-                    <button class="carousel-control-next" type="button" data-bs-target="#carousel-{{ post.id }}" data-bs-slide="next">
-                        <span class="carousel-control-next-icon"></span>
-                        <span class="visually-hidden">Next</span>
-                    </button>
-                    {% endif %}
-                </div>
-                {% endif %}
+<div class="category-bar">
+    <a href="?category=electronics" class="cat-item">💻 Electronics</a>
+    <a href="?category=fashion" class="cat-item">👕 Fashion</a>
+    <a href="?category=accounts" class="cat-item">🎮 Accounts</a>
+    <a href="?category=sports" class="cat-item">⚽ Sports</a>
+    <a href="?category=home" class="cat-item">🏠 Home</a>
+    <a href="?category=accessories" class="cat-item">⌚ Accessories</a>
+    <a href="?category=misc" class="cat-item">📦 Misc</a>
+</div>
 
-                <div class="card-body d-flex flex-column">
-                    <!-- Title & Author -->
-                    <h5 class="card-title mb-1">
-                        <a href="{% url 'post-detail' post.id %}" class="post-title-link text-dark text-decoration-none fw-bold">{{ post.title }}</a>
-                    </h5>
-                    <p class="mb-2">
-                        <small class="text-muted">By <a href="{% url 'user-posts' post.author.username %}" class="text-muted">{{ post.author }}</a> • {{ post.date_posted|date:"M d, Y" }}</small>
-                    </p>
-                    <p class="card-text text-secondary">{{ post.content|truncatewords:20 }}</p>
+<div class="hero-slider">
+    <div class="slide active" style="background-image:url('https://images.unsplash.com/photo-1523275335684-37898b6baf30')"></div>
+    <div class="slide" style="background-image:url('https://images.unsplash.com/photo-1517336714731-489689fd1ca8')"></div>
+    <div class="slide" style="background-image:url('https://images.unsplash.com/photo-1518770660439-4636190af475')"></div>
 
-                    {% if post.price > 0 %}
-                    <span class="badge bg-white border text-dark mb-2 fs-6">${{ post.price }}</span>
-                    {% endif %}
+    <div class="hero-overlay"></div>
 
-                    <!-- Buttons -->
-                    <div class="mt-auto d-flex flex-wrap gap-2 justify-content-between">
-                        {% if post.author != user %}
-                        <div class="d-flex flex-wrap gap-2">
-                            <a href="{% url 'chat-view' post.id post.author.id %}" class="btn btn-outline-primary btn-sm">Message</a>
-                            <button class="btn btn-outline-primary btn-sm" onclick="togglePostMap('{{ post.id }}', '{{ post.author.profile.latitude|default:0 }}', '{{ post.author.profile.longitude|default:0 }}')">📍 Map</button>
-                            <button class="btn btn-outline-primary btn-sm" onclick="revealNumber(this, '{{ post.author.profile.phone_number|default:'' }}')">Show Number</button>
-                        </div>
-                        {% else %}
-                        <a href="{% url 'post-detail' post.id %}" class="btn btn-outline-secondary btn-sm">Manage My Post</a>
-                        {% endif %}
-                    </div>
-
-                    <!-- Map -->
-                    <div id="map-{{ post.id }}" class="mt-2 border rounded shadow-sm" style="height: 200px; display: none;"></div>
-                </div>
-            </div>
-        </div>
-        {% empty %}
-        <p class="text-center text-muted mt-5">No posts found for your search.</p>
-        {% endfor %}
+    <div class="hero-content">
+        <h1>Buy & Sell Anything</h1>
+        <p>Modern marketplace</p>
     </div>
 </div>
 
-<!-- Leaflet JS/CSS -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<div class="site-container">
+
+{% for label, posts in categorized_posts.items %}
+
+<h3 class="section-title">{{ label }}</h3>
+
+<div class="grid">
+
+    {% for post in posts %}
+    <div class="card-modern">
+
+        <div class="image-box">
+            <a href="{% url 'post-detail' post.id %}">
+                {% if post.images.all %}
+                    <img src="{{ post.images.first.image.url }}">
+                {% else %}
+                    <div class="no-img">No Image</div>
+                {% endif %}
+            </a>
+
+            {% if post.author != user %}
+            <div class="actions">
+                <a href="{% url 'chat-view' post.id post.author.id %}">💬</a>
+                <button onclick="togglePostMap('{{ post.id }}','{{ post.author.profile.latitude|default:0 }}','{{ post.author.profile.longitude|default:0 }}')">📍</button>
+                <button onclick="revealNumber(this,'{{ post.author.profile.phone_number|default:'' }}')">📞</button>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="content">
+            <h4>{{ post.title }}</h4>
+
+            <div class="price">
+                <span class="price-val" data-usd="{{ post.price }}">${{ post.price }}</span>
+                <span class="toggle" onclick="toggleCurrency(this)">⇋ GEL</span>
+            </div>
+
+            <small>{{ post.get_subcategory_display }} • {{ post.date_posted|date:"M d" }}</small>
+
+            <div id="map-{{ post.id }}" class="map-box"></div>
+        </div>
+
+    </div>
+    {% endfor %}
+
+</div>
+
+{% endfor %}
+
+</div>
 
 <script>
-function revealNumber(btn, num) {
-    if (!num || num === 'None' || num === '' || num === 'null') {
-        btn.innerText = "No Number Set";
-        btn.classList.replace('btn-outline-primary', 'btn-danger');
-        btn.disabled = true;
+document.addEventListener("DOMContentLoaded", () => {
+
+    // SLIDER FIX
+    let index = 0;
+    const slides = document.querySelectorAll(".slide");
+
+    if (slides.length > 0) {
+        setInterval(() => {
+            slides[index].classList.remove("active");
+            index = (index + 1) % slides.length;
+            slides[index].classList.add("active");
+        }, 4000);
+    }
+
+});
+
+// CURRENCY
+function toggleCurrency(btn){
+    const price = btn.parentElement.querySelector(".price-val");
+    const usd = parseFloat(price.dataset.usd);
+
+    if(price.innerText.includes("$")){
+        price.innerText = (usd * 2.7).toFixed(2) + " GEL";
     } else {
-        btn.outerHTML = `<a href="tel:${num}" class="btn btn-primary btn-sm fw-bold">📞 ${num}</a>`;
+        price.innerText = "$" + usd.toFixed(2);
     }
 }
 
-const postMaps = {};
+// PHONE
+function revealNumber(btn, num){
+    if(!num) return alert("No number");
+    btn.innerText = "📞 " + num;
+    btn.onclick = () => window.location.href = "tel:" + num;
+}
 
-function togglePostMap(id, latStr, lngStr) {
-    const el = document.getElementById(`map-${id}`);
-    const lat = Number(latStr);
-    const lng = Number(lngStr);
+// MAPS (FIXED)
+const maps = {};
 
-    if (!lat || !lng) {
-        alert("This seller hasn't set a map location yet.");
+function togglePostMap(id, lat, lng){
+    const el = document.getElementById("map-" + id);
+
+    if(!lat || !lng || lat == 0 || lng == 0){
+        alert("No location set");
         return;
     }
 
-    if (el.style.display === 'none') {
-        el.style.display = 'block';
-        if (!postMaps[id]) {
-            postMaps[id] = L.map(`map-${id}`).setView([lat, lng], 14);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap'
-            }).addTo(postMaps[id]);
-
-            L.marker([lat, lng]).addTo(postMaps[id]);
-        }
-        setTimeout(() => postMaps[id].invalidateSize(), 200);
-    } else {
-        el.style.display = 'none';
+    if(el.style.display === "block"){
+        el.style.display = "none";
+        return;
     }
+
+    el.style.display = "block";
+
+    setTimeout(() => {
+        if(!maps[id]){
+            maps[id] = L.map("map-" + id).setView([lat, lng], 13);
+
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                attribution: "© OpenStreetMap"
+            }).addTo(maps[id]);
+
+            L.marker([lat, lng]).addTo(maps[id]);
+        } else {
+            maps[id].invalidateSize();
+        }
+    }, 150);
 }
 </script>
 
-{% endblock content %}
+{% endblock %}

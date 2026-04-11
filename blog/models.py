@@ -3,13 +3,85 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from django.urls import reverse
 
+from django.db import models
+from django.contrib.auth.models import User
+from django.utils import timezone
+from django.urls import reverse
+from django.db import models
+from django.utils import timezone
+from django.contrib.auth.models import User
+from django.urls import reverse
+
+
 class Post(models.Model):
+
+    MAIN_CATEGORY_CHOICES = [
+        ('accounts', 'Accounts'),
+        ('sports', 'Sports'),
+        ('fashion', 'Fashion'),
+        ('electronics', 'Electronics'),
+        ('home', 'Home'),
+        ('misc', 'Miscellaneous'),
+        ('accessories', 'Accessories'),
+    ]
+
+    SUBCATEGORY_CHOICES = [
+        # Accessories
+        ('phone_cases', 'Phone Cases'),
+        ('watches', 'Watches'),
+        ('bags', 'Bags'),
+        ('jewelry', 'Jewelry'),
+
+        # Accounts
+        ('steam', 'Steam Account'),
+        ('epic', 'Epic Games Account'),
+        ('riot', 'Riot Games Account'),
+        ('psn', 'PlayStation Account'),
+        ('xbox', 'Xbox Account'),
+
+        # Sports
+        ('winter_sports', 'Winter Sports'),
+        ('football', 'Football'),
+        ('basketball', 'Basketball'),
+        ('gym', 'Gym / Fitness'),
+
+        # Fashion
+        ('men', 'Men Fashion'),
+        ('women', 'Women Fashion'),
+        ('shoes', 'Shoes'),
+
+        # Electronics
+        ('phones', 'Phones'),
+        ('laptops', 'Laptops'),
+        ('tech_accessories', 'Tech Accessories'),
+
+        # Home
+        ('furniture', 'Furniture'),
+        ('decor', 'Decorations'),
+    ]
+
     title = models.CharField(max_length=100)
     content = models.TextField()
     date_posted = models.DateTimeField(default=timezone.now)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    
+
+
+    category = models.CharField(
+        max_length=30,
+        choices=MAIN_CATEGORY_CHOICES,
+        default='misc'
+    )
+
+ 
+    subcategory = models.CharField(
+        max_length=30,
+        choices=SUBCATEGORY_CHOICES,
+        default='steam',
+        blank=True,
+        null=True
+    )
+
     is_sold = models.BooleanField(default=False)
     address = models.CharField(max_length=255, blank=True, null=True)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
@@ -17,10 +89,9 @@ class Post(models.Model):
 
     def __str__(self):
         return self.title
-    
+
     def get_absolute_url(self):
         return reverse('post-detail', kwargs={'pk': self.pk})
-
 class PostImage(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='post_images/')

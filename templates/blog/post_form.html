@@ -1,23 +1,136 @@
 {% extends "blog/base.html" %}
 {% block content %}
 
-<div class="content-section">
-    <h2 class="mb-3">Create New Post</h2>
-    <form method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.title.label_tag }} {{ form.title }}
-        {{ form.content.label_tag }} {{ form.content }}
-        {{ form.price.label_tag }} {{ form.price }}
+<div class="post-form-container">
+    <div class="post-form-card">
 
-        {{ form.address.label_tag }} {{ form.address }}
-        {{ form.latitude }}
-        {{ form.longitude }}
+        <h2 class="mb-3 fw-bold">Create New Post</h2>
 
-        <h5 class="mt-3">Upload Images:</h5>
-        <input type="file" name="images" multiple class="form-control mb-3">
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
 
-        <button type="submit" class="btn btn-success mt-3">Post Item</button>
-    </form>
+            <!-- TITLE -->
+            <div class="form-group">
+                <label>Title</label>
+                {{ form.title }}
+            </div>
+
+            <!-- DESCRIPTION -->
+            <div class="form-group">
+                <label>Description</label>
+                {{ form.content }}
+            </div>
+
+            <!-- PRICE -->
+            <div class="form-group">
+                <label>Price</label>
+                {{ form.price }}
+            </div>
+
+            <!-- CATEGORY -->
+            <div class="form-group">
+                <label>Category</label>
+                {{ form.category }}
+            </div>
+
+            <!-- SUBCATEGORY -->
+            <div class="form-group">
+                <label>Subcategory</label>
+                {{ form.subcategory }}
+            </div>
+
+            <!-- ADDRESS -->
+            <div class="form-group">
+                <label>Address</label>
+                {{ form.address }}
+            </div>
+
+            <!-- HIDDEN LOCATION -->
+            {{ form.latitude }}
+            {{ form.longitude }}
+
+            <!-- IMAGES -->
+            <div class="form-group">
+                <label>Upload Images</label>
+                <input type="file" name="images" multiple class="form-control file-input">
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 mt-3">
+                Post Item
+            </button>
+        </form>
+
+    </div>
 </div>
+
+<!-- ================= DYNAMIC SUBCATEGORY SCRIPT ================= -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const category = document.getElementById("id_category");
+    const subcategory = document.getElementById("id_subcategory");
+
+    const allOptions = Array.from(subcategory.options);
+
+    const map = {
+        accessories: [],
+        
+        accounts: [
+            "steam",
+            "epic",
+            "riot",
+            "psn",
+            "xbox"
+        ],
+
+        sports: [
+            "winter_sports",
+            "football",
+            "basketball",
+            "gym"
+        ],
+
+        fashion: [
+            "men",
+            "women",
+            "shoes"
+        ],
+
+        electronics: [
+            "phones",
+            "laptops",
+            "tech_accessories"
+        ],
+
+        home: [
+            "furniture",
+            "decor"
+        ],
+
+        misc: []
+    };
+
+    function updateSubcategories() {
+
+        const selected = category.value;
+
+        subcategory.innerHTML = "";
+
+        allOptions.forEach(option => {
+
+            if (!option.value) return;
+
+            if (map[selected] && map[selected].includes(option.value)) {
+                subcategory.appendChild(option);
+            }
+        });
+
+    }
+
+    category.addEventListener("change", updateSubcategories);
+
+    updateSubcategories();
+});
+</script>
 
 {% endblock content %}

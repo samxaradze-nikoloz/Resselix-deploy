@@ -5,6 +5,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from users import views as user_views
 from rest_framework.authtoken.views import obtain_auth_token 
+from django.views.generic import RedirectView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -36,6 +37,8 @@ urlpatterns = [
 
     # Include blog app URLs
     path('', include('blog.urls')),
+    path('accounts/', include('allauth.urls')),
+    path('favicon.ico', RedirectView.as_view(url='/static/blog/logo.png')),
 ]
 
 if settings.DEBUG:

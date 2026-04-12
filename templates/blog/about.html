@@ -1,4 +1,75 @@
 {% extends "blog/base.html" %}
 {% block content %}
-    <h1>About Page</h1>
+
+<div class="site-container">
+
+    <!-- HEADER -->
+    <div style="text-align:center; margin: 40px 0;">
+        <h1 style="font-size: 2.2rem; font-weight: 800;">
+            About <span style="color: var(--accent);">Resselix</span>
+        </h1>
+        <p style="color: var(--muted); font-size: 1.05rem; margin-top: 8px;">
+            A modern reselling platform built by a young developer at Mziuri
+        </p>
+    </div>
+
+    <!-- TRANSLATE BUTTON -->
+    <div style="display:flex; justify-content:flex-end; margin-bottom: 15px;">
+        <button class="logout-btn" onclick="toggleLang()">🌐 Translate</button>
+    </div>
+
+    <!-- CARD -->
+    <div class="card-modern" style="padding: 20px;">
+
+        <h3 class="lang" data-en="What is Resselix?" data-ka="რა არის Resselix?">
+            What is Resselix?
+        </h3>
+
+        <p class="lang" style="color: var(--muted); margin-top: 10px;"
+           data-en="Resselix is a modern marketplace where users can buy and resell items like clothes, sneakers, electronics, and more. It is built to make reselling simple, fast, and clean."
+           data-ka="Resselix არის თანამედროვე პლატფორმა, სადაც მომხმარებლებს შეუძლიათ იყიდონ და გაყიდონ ტანსაცმელი, ფეხსაცმელი, ელექტრონიკა და სხვა ნივთები მარტივად.">
+            Resselix is a modern marketplace where users can buy and resell items like clothes, sneakers, electronics, and more. It is built to make reselling simple, fast, and clean.
+        </p>
+
+        <h3 class="lang" style="margin-top: 25px;"
+            data-en="Why I built it"
+            data-ka="რატომ შევქმენი">
+            Why I built it
+        </h3>
+
+        <p class="lang" style="color: var(--muted); margin-top: 10px;"
+           data-en="I built this project as a 16-year-old developer learning at Mziuri. The goal is to improve my Django skills and create a real-world product."
+           data-ka="ეს პროექტი შევქმენი როგორც 16 წლის დეველოპერმა Mziuri-ში სწავლის პროცესში, რათა გამეუმჯობესებინა Django-ს უნარები და შემექმნა რეალური პლატფორმა.">
+            I built this project as a 16-year-old developer learning at Mziuri. The goal is to improve my Django skills and create a real-world product.
+        </p>
+
+        <h3 class="lang" style="margin-top: 25px;"
+            data-en="What you can do"
+            data-ka="რას შეძლებ აქ">
+            What you can do
+        </h3>
+
+        <div class="lang" style="color: var(--muted); margin-top: 10px;"
+             data-en="📦 Sell items • 🛍️ Buy products • 💬 Chat with users • 🔎 Discover deals"
+             data-ka="📦 ნივთების გაყიდვა • 🛍️ ყიდვა • 💬 ჩათი მომხმარებლებთან • 🔎 გარიგებების პოვნა">
+
+            📦 Sell items • 🛍️ Buy products • 💬 Chat with users • 🔎 Discover deals
+        </div>
+
+    </div>
+</div>
+
+<!-- LANGUAGE TOGGLE SCRIPT -->
+<script>
+let currentLang = "en";
+
+function toggleLang() {
+    currentLang = currentLang === "en" ? "ka" : "en";
+
+    document.querySelectorAll(".lang").forEach(el => {
+        el.innerText = el.getAttribute("data-" + currentLang);
+    });
+}
+</script>
+
 {% endblock content %}

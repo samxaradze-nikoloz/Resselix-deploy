@@ -1,20 +1,38 @@
 {% extends "blog/base.html" %}
 {% load crispy_forms_tags %}
-{% block content %}
-    <div class="content-section">
+{% load socialaccount %} {% block content %}
+    <div class="content-section shadow-sm p-4 bg-white rounded">
         <form method="POST">
             {% csrf_token %}
             <fieldset class="form-group">
-                <legend class="border-bottom mb-4">Join Today</legend>
+                <legend class="border-bottom mb-4 font-weight-bold">Join Today</legend>
                 {{ form|crispy }}
             </fieldset>
+
             <div class="form-group">
-                <button class="btn btn-outline-info" type="submit">Sign Up</button>
+                <button class="btn btn-info w-100 font-weight-bold" type="submit">
+                    Sign Up
+                </button>
             </div>
         </form>
-        <div class="border-top pt-3">
+
+        <div class="d-flex align-items-center my-4">
+            <hr class="flex-grow-1">
+            <span class="mx-3 text-muted">OR</span>
+            <hr class="flex-grow-1">
+        </div>
+
+        <div class="form-group">
+            <a href="{% provider_login_url 'google' %}" class="btn btn-outline-dark w-100 d-flex align-items-center justify-content-center py-2">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Logo.svg" alt="Google" style="width: 18px; margin-right: 10px;">
+                Continue with Google
+            </a>
+        </div>
+
+        <div class="border-top pt-3 mt-4 text-center">
             <small class="text-muted">
-                Already Have An Account? <a class="ml-2" href="{% url 'login' %}">Sign In</a>
+                Already Have An Account?
+                <a class="ml-2 font-weight-bold" href="{% url 'login' %}">Sign In</a>
             </small>
         </div>
     </div>

@@ -50,22 +50,42 @@
 
             {% if post.author != user %}
             <div class="actions">
+
                 <a href="{% url 'chat-view' post.id post.author.id %}">💬</a>
-                <button onclick="togglePostMap('{{ post.id }}','{{ post.author.profile.latitude|default:0 }}','{{ post.author.profile.longitude|default:0 }}')">📍</button>
-                <button onclick="revealNumber(this,'{{ post.author.profile.phone_number|default:'' }}')">📞</button>
+
+                <button type="button"
+                        onclick="togglePostMap('{{ post.id }}','{{ post.author.profile.latitude|default:0 }}','{{ post.author.profile.longitude|default:0 }}')">
+                    📍
+                </button>
+
+                <button type="button"
+                        onclick="revealNumber(this,'{{ post.author.profile.phone_number|default:'' }}')">
+                    📞
+                </button>
+
+                <button type="button"
+                        onclick="openCartModal('{{ post.id }}')">
+                    🛒
+                </button>
+
             </div>
             {% endif %}
+
         </div>
 
         <div class="content">
             <h4>{{ post.title }}</h4>
 
             <div class="price">
-                <span class="price-val" data-usd="{{ post.price }}">${{ post.price }}</span>
+                <span class="price-val" data-usd="{{ post.price }}">
+                    ${{ post.price }}
+                </span>
                 <span class="toggle" onclick="toggleCurrency(this)">⇋ GEL</span>
             </div>
 
-            <small>{{ post.get_subcategory_display }} • {{ post.date_posted|date:"M d" }}</small>
+            <small>
+                {{ post.get_subcategory_display }} • {{ post.date_posted|date:"M d" }}
+            </small>
 
             <div id="map-{{ post.id }}" class="map-box"></div>
         </div>
@@ -79,10 +99,31 @@
 
 </div>
 
+<!-- CART MODAL -->
+<div id="cartModal" class="cart-modal">
+    <div class="cart-modal-box">
+
+        <h4>Add this item to cart?</h4>
+
+        <div class="cart-modal-actions">
+
+            <form id="cartForm" method="POST">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success">Yes</button>
+            </form>
+
+            <button type="button" class="btn btn-danger" onclick="closeCartModal()">
+                No
+            </button>
+
+        </div>
+
+    </div>
+</div>
+
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 
-    // SLIDER FIX
     let index = 0;
     const slides = document.querySelectorAll(".slide");
 
@@ -115,7 +156,7 @@ function revealNumber(btn, num){
     btn.onclick = () => window.location.href = "tel:" + num;
 }
 
-// MAPS (FIXED)
+// MAPS
 const maps = {};
 
 function togglePostMap(id, lat, lng){
@@ -146,6 +187,27 @@ function togglePostMap(id, lat, lng){
             maps[id].invalidateSize();
         }
     }, 150);
+}
+
+// CART MODAL
+function openCartModal(postId){
+    const modal = document.getElementById("cartModal");
+    const form = document.getElementById("cartForm");
+
+    if(!modal || !form){
+        alert("Cart modal not found");
+        return;
+    }
+
+    form.action = "/cart/add/" + postId + "/";
+    modal.style.display = "flex";
+}
+
+function closeCartModal(){
+    const modal = document.getElementById("cartModal");
+    if(modal){
+        modal.style.display = "none";
+    }
 }
 </script>
 

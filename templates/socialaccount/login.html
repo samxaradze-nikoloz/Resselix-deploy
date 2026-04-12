@@ -1,0 +1,26 @@
+{% extends "blog/base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block content %}
+<div class="profile-page-container">
+    <div class="settings-card shadow-sm text-center">
+        <h2 class="brand" style="margin-bottom: 12px;">
+            <span class="brand-r">Google</span><span class="brand-ix"> Sign In</span>
+        </h2>
+
+        {% if process == "connect" %}
+            <p>{% blocktrans with provider_name=account.get_provider.name %}Connect your {{ provider_name }} account.{% endblocktrans %}</p>
+        {% else %}
+            <p>{% blocktrans with provider_name=account.get_provider.name %}You are about to sign in using {{ provider_name }}.{% endblocktrans %}</p>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            <button class="auth-submit-btn mt-3" type="submit">
+                {% trans "Continue" %}
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

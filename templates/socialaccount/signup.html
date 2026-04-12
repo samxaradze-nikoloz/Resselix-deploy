@@ -1,0 +1,31 @@
+{% extends "blog/base.html" %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block content %}
+<div class="profile-page-container">
+    <div class="settings-card shadow-sm">
+        <h2 class="brand" style="text-align: center; margin-bottom: 12px;">
+            <span class="brand-r">Complete</span><span class="brand-ix"> Profile</span>
+        </h2>
+        
+        <p class="text-center">
+            {% blocktrans with provider_name=account.get_provider.name %}
+            Finish creating your account via <strong>{{provider_name}}</strong>.
+            {% endblocktrans %}
+        </p>
+
+        <form class="signup" id="signup_form" method="post" action="{% url 'socialaccount_signup' %}">
+            {% csrf_token %}
+            {{ form|crispy }}
+            {% if redirect_field_value %}
+            <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+            {% endif %}
+            <button class="auth-submit-btn mt-3" type="submit">
+                Finish Registration
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

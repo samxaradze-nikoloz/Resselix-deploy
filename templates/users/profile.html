@@ -4,34 +4,37 @@
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
-<button class="theme-toggle" id="themeToggle">🌙</button>
-
 <div class="profile-page-container">
 
+  <!-- HEADER -->
   <div class="profile-header-grid">
-    <img class="profile-pic" src="{{ user.profile.image.url }}">
+    <img class="profile-pic" src="{{ user.profile.image.url }}" alt="profile">
+
     <div>
       <h2 class="username-display">{{ user.username }}</h2>
       <p class="muted">{{ user.email }}</p>
     </div>
   </div>
 
+  <!-- FORM CARD -->
   <div class="settings-card">
 
     <form method="POST" enctype="multipart/form-data" id="profile-form">
       {% csrf_token %}
 
-      <fieldset>
+      <fieldset class="profile-fieldset">
         <legend>User Information</legend>
+
         {{ u_form.username|as_crispy_field }}
         {{ u_form.email|as_crispy_field }}
       </fieldset>
 
-      <fieldset>
+      <fieldset class="profile-fieldset">
         <legend>Profile Settings</legend>
 
         {{ p_form.image|as_crispy_field }}
 
+        <!-- PHONE -->
         <label>Phone Number</label>
         <div class="phone-box">
           <div class="phone-prefix">+995</div>
@@ -47,17 +50,23 @@
 
         {{ p_form.address|as_crispy_field }}
 
+        <!-- MAP -->
         <label>Location</label>
         <div id="map"></div>
 
-        <input type="hidden" id="id_latitude" name="latitude" value="{{ p_form.latitude.value|default:'' }}">
-        <input type="hidden" id="id_longitude" name="longitude" value="{{ p_form.longitude.value|default:'' }}">
-
+        <input type="hidden" id="id_latitude" name="latitude"
+               value="{{ p_form.latitude.value|default:'' }}">
+        <input type="hidden" id="id_longitude" name="longitude"
+               value="{{ p_form.longitude.value|default:'' }}">
       </fieldset>
 
-      <div class="btn-row">
-        <button class="btn-save" type="submit">Save Changes</button>
-        <button form="logout-form" class="btn-logout" type="submit">Logout</button>
+      <!-- ACTIONS -->
+      <div class="profile-actions">
+        <button class="btn-modern-save" type="submit">Save Changes</button>
+
+        <button form="logout-form" class="btn-modern-logout" type="submit">
+          Logout
+        </button>
       </div>
 
     </form>
@@ -65,6 +74,7 @@
   </div>
 </div>
 
+<!-- LOGOUT FORM -->
 <form id="logout-form" method="POST" action="{% url 'logout' %}" style="display:none;">
   {% csrf_token %}
 </form>
@@ -72,6 +82,9 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
+/* =========================
+   PHONE FORMAT
+========================= */
 const phoneInput = document.getElementById("id_phone_number");
 
 function formatPhone(v){
@@ -81,58 +94,47 @@ function formatPhone(v){
     return d.slice(0,3)+' '+d.slice(3,6)+' '+d.slice(6);
 }
 
-phoneInput.addEventListener("input",(e)=>{
+phoneInput.addEventListener("input", (e)=>{
     e.target.value = formatPhone(e.target.value);
 });
 
-document.getElementById("profile-form").addEventListener("submit",()=>{
+document.getElementById("profile-form").addEventListener("submit", ()=>{
     let d = phoneInput.value.replace(/\D/g,'');
     if(d.length===9){
-        phoneInput.value="+995"+d;
+        phoneInput.value = "+995" + d;
     }
 });
 
+/* =========================
+   MAP
+========================= */
 let lat = parseFloat("{{ user.profile.latitude|default:41.7151 }}");
 let lng = parseFloat("{{ user.profile.longitude|default:44.8271 }}");
 
 const map = L.map('map').setView([lat, lng], 13);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-    attribution:''
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: ''
 }).addTo(map);
 
-let marker = L.marker([lat,lng],{draggable:true}).addTo(map);
+let marker = L.marker([lat, lng], {draggable:true}).addTo(map);
 
-function update(lat,lng){
+function update(lat, lng){
     document.getElementById('id_latitude').value = lat.toFixed(6);
     document.getElementById('id_longitude').value = lng.toFixed(6);
 }
 
-marker.on('dragend',e=>{
-    let p=e.target.getLatLng();
-    update(p.lat,p.lng);
+marker.on('dragend', e=>{
+    let p = e.target.getLatLng();
+    update(p.lat, p.lng);
 });
 
-map.on('click',e=>{
+map.on('click', e=>{
     marker.setLatLng(e.latlng);
-    update(e.latlng.lat,e.latlng.lng);
+    update(e.latlng.lat, e.latlng.lng);
 });
 
-setTimeout(()=>map.invalidateSize(),300);
-
-const toggle = document.getElementById("themeToggle");
-
-function setTheme(dark){
-    document.body.classList.toggle("dark",dark);
-    localStorage.setItem("theme",dark?"dark":"light");
-    toggle.textContent = dark?"☀️":"🌙";
-}
-
-toggle.addEventListener("click",()=>{
-    setTheme(!document.body.classList.contains("dark"));
-});
-
-setTheme(localStorage.getItem("theme")==="dark");
+setTimeout(()=>map.invalidateSize(), 300);
 </script>
 
 {% endblock %}

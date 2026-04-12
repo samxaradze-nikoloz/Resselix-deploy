@@ -1,6 +1,4 @@
 """
-
-
 Django settings for blogPost_app project.
 """
 
@@ -8,22 +6,22 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Base directory
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load environment variables FIRST
 load_dotenv(BASE_DIR / ".env")
 
-
 # ==============================
-# SECURITY SETTINGS
+# SECURITY
 # ==============================
 
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
 DEBUG = os.environ.get("DEBUG") == "True"
 
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
+ALLOWED_HOSTS = os.environ.get(
+    "ALLOWED_HOSTS",
+    "127.0.0.1,localhost"
+).split(",")
 
 
 # ==============================
@@ -31,23 +29,36 @@ ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "127.0.0.1,localhost").split(","
 # ==============================
 
 INSTALLED_APPS = [
+    # Django
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
+
+    # DRF
     "rest_framework",
     "rest_framework.authtoken",
 
-    # Your apps
+    # apps
     'blog',
     'users',
 
-    # Crispy Forms
+    # crispy
     'crispy_forms',
     'crispy_bootstrap4',
+
+    # allauth
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.facebook',
 ]
+
+SITE_ID = 2
 
 
 # ==============================
@@ -60,6 +71,9 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+
+    'allauth.account.middleware.AccountMiddleware',
+
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -95,20 +109,20 @@ WSGI_APPLICATION = 'blogPost_app.wsgi.application'
 # DATABASE
 # ==============================
 
-# Resselix/settings.py
-
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "postgres",
         "USER": "postgres",
         "PASSWORD": "postgres",
-        "HOST": "127.0.0.1",      # This matches the service name in docker-compose
-        "PORT": 5432,      # Default PostgreSQL port
+        "HOST": "127.0.0.1",
+        "PORT": 5432,
     }
 }
+
+
 # ==============================
-# PASSWORD VALIDATION
+# AUTH
 # ==============================
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -117,6 +131,12 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
+
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+)
 
 
 # ==============================
@@ -130,7 +150,7 @@ USE_TZ = True
 
 
 # ==============================
-# STATIC & MEDIA
+# STATIC / MEDIA
 # ==============================
 
 STATIC_URL = '/static/'
@@ -149,7 +169,7 @@ CRISPY_TEMPLATE_PACK = "bootstrap4"
 
 
 # ==============================
-# LOGIN / LOGOUT
+# LOGIN
 # ==============================
 
 LOGIN_REDIRECT_URL = 'blog-home'
@@ -174,10 +194,25 @@ EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 # REST FRAMEWORK
 # ==============================
 
-
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
 }
+
+
+
+
+# settings.py
+
+# Automatically create a Django user from the Google data
+SOCIALACCOUNT_AUTO_SIGNUP = True 
+
+# Use the Google email as the username if possible
+ACCOUNT_ADAPTER = 'allauth.account.adapter.DefaultAccountAdapter'
+SOCIALACCOUNT_ADAPTER = 'allauth.socialaccount.adapter.DefaultSocialAccountAdapter'
+
+# Ensure the email is verified automatically since Google already verified it
+SOCIALACCOUNT_EMAIL_VERIFICATION = "none" 
+SOCIALACCOUNT_EMAIL_REQUIRED = True

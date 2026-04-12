@@ -1,81 +1,160 @@
 {% extends "blog/base.html" %}
 {% block content %}
 
-<article class="media content-section">
-  <img class="rounded-circle article-img" src="{{ object.author.profile.image.url }}">
-  <div class="media-body">
-    <div class="article-metadata d-flex justify-content-between align-items-center">
-      <div>
-        <a class="mr-2 font-weight-bold text-info" href="{% url 'user-posts' object.author.username %}">{{ object.author }}</a>
-        <small class="text-muted">{{ object.date_posted|date:"F d, Y" }}</small>
-      </div>
+<div class="site-container">
 
-      {% if object.author == user %}
-      <div>
-        <a class="btn btn-secondary btn-sm" href="{% url 'post-update' object.id %}">Update</a>
-        <a class="btn btn-danger btn-sm" href="{% url 'post-delete' object.id %}">Delete</a>
-      </div>
-      {% endif %}
-    </div>
+  <div class="card-modern" style="padding:20px;">
 
-    <h2 class="article-title">{{ object.title }}</h2>
+    <!-- FIXED 2 COLUMN LAYOUT -->
+    <div class="post-layout">
 
-    {% if object.image %}
-      <img src="{{ object.image.url }}" alt="{{ object.title }}" class="img-fluid mb-3 rounded" style="max-width:100%; height:auto;">
-    {% endif %}
+      <!-- LEFT IMAGE -->
+      <div class="post-left">
 
-    {% comment %} Display additional images {% endcomment %}
-    {% for img in images %}
-      <img src="{{ img.image.url }}" class="img-fluid mb-2 rounded" style="max-width:100%; height:auto;">
-    {% endfor %}
-
-    <div class="d-flex flex-wrap align-items-center mb-3 gap-2">
-      {% if object.price > 0 %}
-        <span class="price-tag h4 mb-0">${{ object.price }}</span>
-      {% endif %}
-
-      {% if object.author != user %}
-        {% if user.is_authenticated %}
-          <!-- Three dots menu -->
-          <div class="dropdown">
-            <button class="btn btn-outline-info btn-sm dropdown-toggle" type="button" id="optionsMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              ⋮ Options
-            </button>
-            <div class="dropdown-menu" aria-labelledby="optionsMenu">
-              <a class="dropdown-item" href="{% url 'chat-view' object.id object.author.id %}">Message via App</a>
-              <a class="dropdown-item" href="mailto:{{ object.author.email }}?subject=Regarding your listing '{{ object.title }}'">Message via Gmail</a>
-            </div>
-          </div>
-
-          <!-- Phone number -->
-          {% if object.author.profile.phone_number %}
-          <button class="btn btn-outline-secondary btn-sm" 
-                  onclick="revealNumber(this, '{{ object.author.profile.phone_number|safe }}')">
-            Show Number
-          </button>
+        <div class="post-image-box">
+          {% if object.image %}
+            <img id="mainImage" src="{{ object.image.url }}" onclick="openModal(0)">
           {% endif %}
-        {% else %}
-          <a href="{% url 'login' %}" class="btn btn-success btn-sm">Login to Contact</a>
-        {% endif %}
-      {% else %}
-        <p class="text-muted"><em>This is your listing</em></p>
-      {% endif %}
-    </div>
+        </div>
 
-    <p class="article-content text-secondary">{{ object.content }}</p>
+        <div class="post-thumbs">
+          {% for img in images %}
+            <img src="{{ img.image.url }}"
+                 onclick="setMainImage('{{ img.image.url }}', {{ forloop.counter0 }})">
+          {% endfor %}
+        </div>
+
+      </div>
+
+      <!-- RIGHT INFO -->
+      <div class="post-right">
+
+        <h2 style="font-weight:800;">{{ object.title }}</h2>
+
+        {% if object.price %}
+          <h3 style="color:var(--accent);">${{ object.price }}</h3>
+        {% endif %}
+
+        <p style="color:var(--muted);">{{ object.content }}</p>
+
+        <hr>
+
+        <!-- ACTIONS -->
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+
+          {% if object.author != user %}
+
+            {% if user.is_authenticated %}
+              <a href="{% url 'chat-view' object.id object.author.id %}" class="btn-modern-save">
+                💬 Message
+              </a>
+
+              <a href="mailto:{{ object.author.email }}" class="btn-modern-logout">
+                📧 Email
+              </a>
+
+              {% if object.author.profile.phone_number %}
+              <button class="btn-modern-logout"
+                      onclick="revealNumber(this, '{{ object.author.profile.phone_number }}')">
+                📞 Show Phone
+              </button>
+              {% endif %}
+            {% else %}
+              <a href="{% url 'login' %}" class="btn-modern-save">Login</a>
+            {% endif %}
+
+          {% else %}
+            <span style="color:var(--muted);">Your listing</span>
+          {% endif %}
+
+        </div>
+
+        <!-- LOCATION -->
+        {% if object.author.profile.address %}
+          <p style="margin-top:15px;">
+            📍 {{ object.author.profile.address }}
+          </p>
+        {% endif %}
+
+        <!-- MAP -->
+        <div id="map"></div>
+
+      </div>
+
+    </div>
   </div>
-</article>
+</div>
+
+<!-- ================= MODAL ================= -->
+<div id="imageModal" class="image-modal">
+    <span class="close-modal" onclick="closeModal()">&times;</span>
+
+    <button class="nav-btn left" onclick="prevImage()">❮</button>
+    <img id="modalImg">
+    <button class="nav-btn right" onclick="nextImage()">❯</button>
+</div>
 
 <script>
-  function revealNumber(btn, num) {
-      if (!num || num === 'None' || num === '' || num === 'null') {
-          btn.innerText = "No Number Set";
-          btn.classList.replace('btn-outline-secondary', 'btn-danger');
-          btn.disabled = true;
-      } else {
-          btn.outerHTML = `<a href="tel:${num}" class="btn btn-success btn-sm font-weight-bold shadow-sm">📞 ${num}</a>`;
-      }
-  }
+let images = [
+  {% if object.image %}"{{ object.image.url }}",{% endif %}
+  {% for img in images %}"{{ img.image.url }}",{% endfor %}
+];
+
+let currentIndex = 0;
+
+function setMainImage(src, index){
+    document.getElementById("mainImage").src = src;
+    currentIndex = index;
+}
+
+function openModal(index){
+    currentIndex = index;
+    document.getElementById("imageModal").style.display = "flex";
+    document.getElementById("modalImg").src = images[currentIndex];
+}
+
+function closeModal(){
+    document.getElementById("imageModal").style.display = "none";
+}
+
+function nextImage(){
+    currentIndex = (currentIndex + 1) % images.length;
+    document.getElementById("modalImg").src = images[currentIndex];
+}
+
+function prevImage(){
+    currentIndex = (currentIndex - 1 + images.length) % images.length;
+    document.getElementById("modalImg").src = images[currentIndex];
+}
+
+document.addEventListener("keydown", function(e){
+    if(e.key === "Escape") closeModal();
+    if(e.key === "ArrowRight") nextImage();
+    if(e.key === "ArrowLeft") prevImage();
+});
+
+function revealNumber(btn, num){
+    btn.outerHTML = `<a href="tel:${num}" class="btn-modern-save">📞 ${num}</a>`;
+}
 </script>
 
-{% endblock content %}
+<!-- MAP -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+let lat = parseFloat("{{ object.author.profile.latitude|default:41.7151 }}");
+let lng = parseFloat("{{ object.author.profile.longitude|default:44.8271 }}");
+
+const map = L.map('map').setView([lat, lng], 13);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: ''
+}).addTo(map);
+
+L.marker([lat, lng]).addTo(map);
+
+setTimeout(()=>map.invalidateSize(), 300);
+</script>
+
+{% endblock %}

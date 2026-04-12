@@ -1,136 +1,242 @@
 {% extends "blog/base.html" %}
 {% block content %}
 
-<div class="post-form-container">
-    <div class="post-form-card">
+<div class="site-container">
 
-        <h2 class="mb-3 fw-bold">Create New Post</h2>
+  <div class="card-modern" style="padding:20px;">
 
-        <form method="POST" enctype="multipart/form-data">
-            {% csrf_token %}
+    <!-- MAIN GRID -->
+    <div class="post-layout">
 
-            <!-- TITLE -->
-            <div class="form-group">
-                <label>Title</label>
-                {{ form.title }}
-            </div>
+      <!-- LEFT SIDE -->
+      <div class="post-left">
 
-            <!-- DESCRIPTION -->
-            <div class="form-group">
-                <label>Description</label>
-                {{ form.content }}
-            </div>
+        <div class="post-image-box">
+          {% if object.image %}
+            <img id="mainImage"
+                 src="{{ object.image.url }}"
+                 onclick="openModal(0)">
+          {% endif %}
+        </div>
 
-            <!-- PRICE -->
-            <div class="form-group">
-                <label>Price</label>
-                {{ form.price }}
-            </div>
+        <div class="post-thumbs">
+          {% for img in images %}
+            <img src="{{ img.image.url }}"
+                 onclick="setMainImage('{{ img.image.url }}', {{ forloop.counter0 }})">
+          {% endfor %}
+        </div>
 
-            <!-- CATEGORY -->
-            <div class="form-group">
-                <label>Category</label>
-                {{ form.category }}
-            </div>
+      </div>
 
-            <!-- SUBCATEGORY -->
-            <div class="form-group">
-                <label>Subcategory</label>
-                {{ form.subcategory }}
-            </div>
+      <!-- RIGHT SIDE -->
+      <div class="post-right">
 
-            <!-- ADDRESS -->
-            <div class="form-group">
-                <label>Address</label>
-                {{ form.address }}
-            </div>
+        <h2 style="font-weight:800;">{{ object.title }}</h2>
 
-            <!-- HIDDEN LOCATION -->
-            {{ form.latitude }}
-            {{ form.longitude }}
+        {% if object.price %}
+          <h3 id="priceBox" style="color:var(--accent);">
+            $ {{ object.price }}
+          </h3>
+        {% endif %}
 
-            <!-- IMAGES -->
-            <div class="form-group">
-                <label>Upload Images</label>
-                <input type="file" name="images" multiple class="form-control file-input">
-            </div>
+        <p style="color:var(--muted);">
+          {{ object.content }}
+        </p>
 
-            <button type="submit" class="btn btn-primary w-100 mt-3">
-                Post Item
-            </button>
-        </form>
+        <hr>
+
+        <!-- ACTIONS -->
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+
+          {% if object.author != user %}
+
+            {% if user.is_authenticated %}
+              <a href="{% url 'chat-view' object.id object.author.id %}" class="btn-modern-save">
+                💬 Message
+              </a>
+
+              <a href="mailto:{{ object.author.email }}" class="btn-modern-logout">
+                📧 Email
+              </a>
+
+              {% if object.author.profile.phone_number %}
+              <button class="btn-modern-logout"
+                      onclick="revealNumber(this, '{{ object.author.profile.phone_number }}')">
+                📞 Show Phone
+              </button>
+              {% endif %}
+
+            {% else %}
+              <a href="{% url 'login' %}" class="btn-modern-save">Login</a>
+            {% endif %}
+
+          {% else %}
+            <span style="color:var(--muted);">Your listing</span>
+          {% endif %}
+
+        </div>
+
+        <!-- LOCATION -->
+        {% if object.author.profile.address %}
+          <p style="margin-top:15px;">
+            📍 {{ object.author.profile.address }}
+          </p>
+        {% endif %}
+
+        <!-- MAP -->
+        <div id="map"></div>
+
+        <!-- CURRENCY -->
+        <div style="margin-top:10px;">
+          <button class="btn-modern-logout" onclick="toggleCurrency()">
+            💱 Switch USD / GEL
+          </button>
+        </div>
+
+      </div>
 
     </div>
+  </div>
 </div>
 
-<!-- ================= DYNAMIC SUBCATEGORY SCRIPT ================= -->
+<!-- ================= MODAL ================= -->
+<div id="imageModal" class="image-modal" onclick="closeModal(event)">
+
+    <span class="close-modal" onclick="closeModal(event)">&times;</span>
+
+    <button class="nav-btn left" onclick="prevImage(event)">❮</button>
+
+    <div class="zoom-wrapper">
+        <img id="modalImg">
+    </div>
+
+    <button class="nav-btn right" onclick="nextImage(event)">❯</button>
+
+</div>
+
+<!-- ================= JS ================= -->
 <script>
-document.addEventListener("DOMContentLoaded", function () {
 
-    const category = document.getElementById("id_category");
-    const subcategory = document.getElementById("id_subcategory");
+let images = [
+  {% if object.image %}"{{ object.image.url }}",{% endif %}
+  {% for img in images %}"{{ img.image.url }}",{% endfor %}
+];
 
-    const allOptions = Array.from(subcategory.options);
+let currentIndex = 0;
+let scale = 1;
 
-    const map = {
-        accessories: [],
-        
-        accounts: [
-            "steam",
-            "epic",
-            "riot",
-            "psn",
-            "xbox"
-        ],
+/* MAIN IMAGE SWITCH */
+function setMainImage(src, index){
+    document.getElementById("mainImage").src = src;
+    currentIndex = index;
+}
 
-        sports: [
-            "winter_sports",
-            "football",
-            "basketball",
-            "gym"
-        ],
+/* OPEN MODAL */
+function openModal(index){
+    currentIndex = index;
+    scale = 1;
 
-        fashion: [
-            "men",
-            "women",
-            "shoes"
-        ],
+    const modal = document.getElementById("imageModal");
+    const img = document.getElementById("modalImg");
 
-        electronics: [
-            "phones",
-            "laptops",
-            "tech_accessories"
-        ],
+    modal.style.display = "flex";
+    img.src = images[currentIndex];
+    img.style.transform = "scale(1)";
+}
 
-        home: [
-            "furniture",
-            "decor"
-        ],
+/* CLOSE MODAL */
+function closeModal(e){
+    if(e && e.target !== e.currentTarget) return;
+    document.getElementById("imageModal").style.display = "none";
+}
 
-        misc: []
-    };
+/* NAV */
+function nextImage(e){
+    if(e) e.stopPropagation();
+    currentIndex = (currentIndex + 1) % images.length;
+    document.getElementById("modalImg").src = images[currentIndex];
+    resetZoom();
+}
 
-    function updateSubcategories() {
+function prevImage(e){
+    if(e) e.stopPropagation();
+    currentIndex = (currentIndex - 1 + images.length) % images.length;
+    document.getElementById("modalImg").src = images[currentIndex];
+    resetZoom();
+}
 
-        const selected = category.value;
+/* ZOOM */
+function resetZoom(){
+    scale = 1;
+    document.getElementById("modalImg").style.transform = "scale(1)";
+}
 
-        subcategory.innerHTML = "";
+function zoom(delta){
+    scale += delta;
+    if(scale < 1) scale = 1;
+    if(scale > 4) scale = 4;
 
-        allOptions.forEach(option => {
+    document.getElementById("modalImg").style.transform =
+        `scale(${scale})`;
+}
 
-            if (!option.value) return;
-
-            if (map[selected] && map[selected].includes(option.value)) {
-                subcategory.appendChild(option);
-            }
-        });
-
+/* WHEEL ZOOM */
+document.addEventListener("wheel", function(e){
+    const modal = document.getElementById("imageModal");
+    if(modal.style.display === "flex"){
+        e.preventDefault();
+        zoom(e.deltaY > 0 ? -0.2 : 0.2);
     }
+}, { passive:false });
 
-    category.addEventListener("change", updateSubcategories);
-
-    updateSubcategories();
+/* KEYBOARD */
+document.addEventListener("keydown", function(e){
+    if(e.key === "Escape") document.getElementById("imageModal").style.display = "none";
+    if(e.key === "ArrowRight") nextImage();
+    if(e.key === "ArrowLeft") prevImage();
 });
+
+/* PHONE */
+function revealNumber(btn, num){
+    btn.outerHTML = `<a href="tel:${num}" class="btn-modern-save">📞 ${num}</a>`;
+}
+
+/* CURRENCY */
+let usdPrice = {{ object.price|default:0 }};
+let currency = "USD";
+
+function toggleCurrency(){
+    const box = document.getElementById("priceBox");
+
+    if(currency === "USD"){
+        let gel = (usdPrice * 2.6).toFixed(2);
+        box.innerHTML = `₾ ${gel}`;
+        currency = "GEL";
+    } else {
+        box.innerHTML = `$ ${usdPrice}`;
+        currency = "USD";
+    }
+}
+
 </script>
 
-{% endblock content %}
+<!-- MAP -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+let lat = parseFloat("{{ object.author.profile.latitude|default:41.7151 }}");
+let lng = parseFloat("{{ object.author.profile.longitude|default:44.8271 }}");
+
+const map = L.map('map').setView([lat, lng], 13);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: ''
+}).addTo(map);
+
+L.marker([lat, lng]).addTo(map);
+
+setTimeout(()=>map.invalidateSize(), 300);
+</script>
+
+{% endblock %}

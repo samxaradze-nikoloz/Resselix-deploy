@@ -39,6 +39,7 @@ urlpatterns = [
     path('', include('blog.urls')),
     path('accounts/', include('allauth.urls')),
     path('favicon.ico', RedirectView.as_view(url='/static/blog/logo.png')),
+    path('profile/<str:username>/', user_views.public_profile, name='user-profile'),
 ]
 
 if settings.DEBUG:

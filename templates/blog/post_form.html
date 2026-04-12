@@ -1,242 +1,135 @@
 {% extends "blog/base.html" %}
+{% load static %}
 {% block content %}
 
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
 <div class="site-container">
+  <div class="card-modern" style="padding:20px; max-width:750px; margin:auto;">
+    <h2 style="font-weight:800; margin-bottom:15px;">Create New Listing</h2>
 
-  <div class="card-modern" style="padding:20px;">
+    <form method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
 
-    <!-- MAIN GRID -->
-    <div class="post-layout">
-
-      <!-- LEFT SIDE -->
-      <div class="post-left">
-
-        <div class="post-image-box">
-          {% if object.image %}
-            <img id="mainImage"
-                 src="{{ object.image.url }}"
-                 onclick="openModal(0)">
-          {% endif %}
+      {% if form.errors %}
+        <div class="alert alert-danger">
+            {{ form.errors }}
         </div>
+      {% endif %}
 
-        <div class="post-thumbs">
-          {% for img in images %}
-            <img src="{{ img.image.url }}"
-                 onclick="setMainImage('{{ img.image.url }}', {{ forloop.counter0 }})">
-          {% endfor %}
-        </div>
+      <label>Title</label>
+      {{ form.title }}
+      <br>
 
-      </div>
+      <label>Price</label>
+      {{ form.price }}
+      <br>
 
-      <!-- RIGHT SIDE -->
-      <div class="post-right">
+      <label>Description</label>
+      {{ form.content }}
+      <br>
 
-        <h2 style="font-weight:800;">{{ object.title }}</h2>
+      <label>Category</label>
+      <select name="category" id="id_category" class="form-control" required>
+        <option value="">Select category</option>
+        {% for value, label in form.fields.category.choices %}
+            {% if value %} <option value="{{ value }}">{{ label }}</option> {% endif %}
+        {% endfor %}
+      </select>
+      <br>
 
-        {% if object.price %}
-          <h3 id="priceBox" style="color:var(--accent);">
-            $ {{ object.price }}
-          </h3>
-        {% endif %}
+      <label>Subcategory</label>
+      <select name="subcategory" id="id_subcategory" class="form-control" required>
+        <option value="">Select subcategory</option>
+      </select>
+      <br>
 
-        <p style="color:var(--muted);">
-          {{ object.content }}
-        </p>
+      <label>Main Image</label>
+      <input type="file" name="main_image" class="form-control" required>
+      <br>
 
-        <hr>
+      <label>Extra Images (Hold Ctrl to select multiple)</label>
+      <input type="file" name="images" class="form-control" multiple>
+      <br>
 
-        <!-- ACTIONS -->
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <label>Address</label>
+      {{ form.address }}
+      <br>
 
-          {% if object.author != user %}
+      <label>Pick Location</label>
+      <div id="map" style="height:300px; border-radius:10px; margin-bottom: 10px;"></div>
 
-            {% if user.is_authenticated %}
-              <a href="{% url 'chat-view' object.id object.author.id %}" class="btn-modern-save">
-                💬 Message
-              </a>
+      {{ form.latitude }}
+      {{ form.longitude }}
 
-              <a href="mailto:{{ object.author.email }}" class="btn-modern-logout">
-                📧 Email
-              </a>
-
-              {% if object.author.profile.phone_number %}
-              <button class="btn-modern-logout"
-                      onclick="revealNumber(this, '{{ object.author.profile.phone_number }}')">
-                📞 Show Phone
-              </button>
-              {% endif %}
-
-            {% else %}
-              <a href="{% url 'login' %}" class="btn-modern-save">Login</a>
-            {% endif %}
-
-          {% else %}
-            <span style="color:var(--muted);">Your listing</span>
-          {% endif %}
-
-        </div>
-
-        <!-- LOCATION -->
-        {% if object.author.profile.address %}
-          <p style="margin-top:15px;">
-            📍 {{ object.author.profile.address }}
-          </p>
-        {% endif %}
-
-        <!-- MAP -->
-        <div id="map"></div>
-
-        <!-- CURRENCY -->
-        <div style="margin-top:10px;">
-          <button class="btn-modern-logout" onclick="toggleCurrency()">
-            💱 Switch USD / GEL
-          </button>
-        </div>
-
-      </div>
-
-    </div>
+      <button type="submit" class="btn-modern-save">
+        🚀 Post Listing
+      </button>
+    </form>
   </div>
 </div>
 
-<!-- ================= MODAL ================= -->
-<div id="imageModal" class="image-modal" onclick="closeModal(event)">
-
-    <span class="close-modal" onclick="closeModal(event)">&times;</span>
-
-    <button class="nav-btn left" onclick="prevImage(event)">❮</button>
-
-    <div class="zoom-wrapper">
-        <img id="modalImg">
-    </div>
-
-    <button class="nav-btn right" onclick="nextImage(event)">❯</button>
-
-</div>
-
-<!-- ================= JS ================= -->
-<script>
-
-let images = [
-  {% if object.image %}"{{ object.image.url }}",{% endif %}
-  {% for img in images %}"{{ img.image.url }}",{% endfor %}
-];
-
-let currentIndex = 0;
-let scale = 1;
-
-/* MAIN IMAGE SWITCH */
-function setMainImage(src, index){
-    document.getElementById("mainImage").src = src;
-    currentIndex = index;
-}
-
-/* OPEN MODAL */
-function openModal(index){
-    currentIndex = index;
-    scale = 1;
-
-    const modal = document.getElementById("imageModal");
-    const img = document.getElementById("modalImg");
-
-    modal.style.display = "flex";
-    img.src = images[currentIndex];
-    img.style.transform = "scale(1)";
-}
-
-/* CLOSE MODAL */
-function closeModal(e){
-    if(e && e.target !== e.currentTarget) return;
-    document.getElementById("imageModal").style.display = "none";
-}
-
-/* NAV */
-function nextImage(e){
-    if(e) e.stopPropagation();
-    currentIndex = (currentIndex + 1) % images.length;
-    document.getElementById("modalImg").src = images[currentIndex];
-    resetZoom();
-}
-
-function prevImage(e){
-    if(e) e.stopPropagation();
-    currentIndex = (currentIndex - 1 + images.length) % images.length;
-    document.getElementById("modalImg").src = images[currentIndex];
-    resetZoom();
-}
-
-/* ZOOM */
-function resetZoom(){
-    scale = 1;
-    document.getElementById("modalImg").style.transform = "scale(1)";
-}
-
-function zoom(delta){
-    scale += delta;
-    if(scale < 1) scale = 1;
-    if(scale > 4) scale = 4;
-
-    document.getElementById("modalImg").style.transform =
-        `scale(${scale})`;
-}
-
-/* WHEEL ZOOM */
-document.addEventListener("wheel", function(e){
-    const modal = document.getElementById("imageModal");
-    if(modal.style.display === "flex"){
-        e.preventDefault();
-        zoom(e.deltaY > 0 ? -0.2 : 0.2);
-    }
-}, { passive:false });
-
-/* KEYBOARD */
-document.addEventListener("keydown", function(e){
-    if(e.key === "Escape") document.getElementById("imageModal").style.display = "none";
-    if(e.key === "ArrowRight") nextImage();
-    if(e.key === "ArrowLeft") prevImage();
-});
-
-/* PHONE */
-function revealNumber(btn, num){
-    btn.outerHTML = `<a href="tel:${num}" class="btn-modern-save">📞 ${num}</a>`;
-}
-
-/* CURRENCY */
-let usdPrice = {{ object.price|default:0 }};
-let currency = "USD";
-
-function toggleCurrency(){
-    const box = document.getElementById("priceBox");
-
-    if(currency === "USD"){
-        let gel = (usdPrice * 2.6).toFixed(2);
-        box.innerHTML = `₾ ${gel}`;
-        currency = "GEL";
-    } else {
-        box.innerHTML = `$ ${usdPrice}`;
-        currency = "USD";
-    }
-}
-
-</script>
-
-<!-- MAP -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-let lat = parseFloat("{{ object.author.profile.latitude|default:41.7151 }}");
-let lng = parseFloat("{{ object.author.profile.longitude|default:44.8271 }}");
+// --- LEAFLET MAP LOGIC ---
+let lat = 41.7151;
+let lng = 44.8271;
 
-const map = L.map('map').setView([lat, lng], 13);
+const map = L.map('map').setView([lat, lng], 12);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: ''
-}).addTo(map);
+let marker = L.marker([lat, lng], {draggable:true}).addTo(map);
 
-L.marker([lat, lng]).addTo(map);
+// Django auto-assigns IDs like 'id_latitude' to form fields
+const latInput = document.getElementById("id_latitude");
+const lngInput = document.getElementById("id_longitude");
 
-setTimeout(()=>map.invalidateSize(), 300);
+function updateCoords(l, g){
+  latInput.value = l.toFixed(6);
+  lngInput.value = g.toFixed(6);
+}
+
+// Initial values
+updateCoords(lat, lng);
+
+marker.on('dragend', function(){
+  const p = marker.getLatLng();
+  updateCoords(p.lat, p.lng);
+});
+
+map.on('click', function(e){
+  marker.setLatLng(e.latlng);
+  updateCoords(e.latlng.lat, e.latlng.lng);
+});
+
+setTimeout(() => map.invalidateSize(), 300);
+
+// --- DYNAMIC SUBCATEGORIES ---
+// IMPORTANT: These strings must match SUBCATEGORY_CHOICES in models.py exactly!
+const subcategories = {
+  electronics: [["phones", "Phones"], ["laptops", "Laptops"], ["tech_accessories", "Tech Accessories"]],
+  fashion: [["men", "Men Fashion"], ["women", "Women Fashion"], ["shoes", "Shoes"]],
+  sports: [["winter_sports", "Winter Sports"], ["football", "Football"], ["basketball", "Basketball"], ["gym", "Gym / Fitness"]],
+  home: [["furniture", "Furniture"], ["decor", "Decorations"]],
+  accessories: [["phone_cases", "Phone Cases"], ["watches", "Watches"], ["bags", "Bags"], ["jewelry", "Jewelry"]],
+  accounts: [["steam", "Steam Account"], ["epic", "Epic Games Account"], ["riot", "Riot Games Account"], ["psn", "PlayStation Account"], ["xbox", "Xbox Account"]],
+  misc: [] 
+};
+
+document.getElementById("id_category").addEventListener("change", function () {
+  const subSelect = document.getElementById("id_subcategory");
+  subSelect.innerHTML = "<option value=''>Select subcategory</option>";
+
+  const choices = subcategories[this.value];
+  if (choices) {
+    choices.forEach(pair => {
+      let opt = document.createElement("option");
+      opt.value = pair[0];
+      opt.textContent = pair[1];
+      subSelect.appendChild(opt);
+    });
+  }
+});
 </script>
-
 {% endblock %}

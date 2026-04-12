@@ -1,5 +1,6 @@
 {% extends "blog/base.html" %}
 {% load crispy_forms_tags %}
+{% load static %}
 {% block content %}
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -16,7 +17,7 @@
     </div>
   </div>
 
-  <!-- FORM CARD -->
+  <!-- SETTINGS CARD -->
   <div class="settings-card">
 
     <form method="POST" enctype="multipart/form-data" id="profile-form">
@@ -34,7 +35,7 @@
 
         {{ p_form.image|as_crispy_field }}
 
-        <!-- PHONE -->
+        <!-- PHONE INPUT (NO TOGGLE, CLEAN ONLY INPUT) -->
         <label>Phone Number</label>
         <div class="phone-box">
           <div class="phone-prefix">+995</div>
@@ -50,17 +51,18 @@
 
         {{ p_form.address|as_crispy_field }}
 
-        <!-- MAP -->
+        <!-- LOCATION MAP (FIXED - ONLY ONE MAP) -->
         <label>Location</label>
-        <div id="map"></div>
+        <div id="map" style="height: 300px; border-radius: 10px;"></div>
 
         <input type="hidden" id="id_latitude" name="latitude"
                value="{{ p_form.latitude.value|default:'' }}">
+
         <input type="hidden" id="id_longitude" name="longitude"
                value="{{ p_form.longitude.value|default:'' }}">
+
       </fieldset>
 
-      <!-- ACTIONS -->
       <div class="profile-actions">
         <button class="btn-modern-save" type="submit">Save Changes</button>
 
@@ -72,19 +74,48 @@
     </form>
 
   </div>
+
+  <!-- USER POSTS -->
+  <div class="user-posts-section">
+    <h3>Listings by {{ user.username }}</h3>
+
+    <div class="grid">
+      {% for post in user.post_set.all %}
+        <div class="card-modern">
+          <a href="{% url 'post-detail' post.id %}">
+
+            {% if post.image %}
+              <img src="{{ post.image.url }}">
+            {% else %}
+              <div class="no-img">No Image</div>
+            {% endif %}
+
+          </a>
+
+          <div class="content">
+            <h4>{{ post.title }}</h4>
+            <p>${{ post.price }}</p>
+          </div>
+        </div>
+      {% empty %}
+        <p>No listings yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+
 </div>
 
-<!-- LOGOUT FORM -->
+<!-- LOGOUT -->
 <form id="logout-form" method="POST" action="{% url 'logout' %}" style="display:none;">
   {% csrf_token %}
 </form>
 
+<!-- LEAFLET -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-/* =========================
-   PHONE FORMAT
-========================= */
+
+/* ================= PHONE FORMAT ================= */
 const phoneInput = document.getElementById("id_phone_number");
 
 function formatPhone(v){
@@ -94,22 +125,25 @@ function formatPhone(v){
     return d.slice(0,3)+' '+d.slice(3,6)+' '+d.slice(6);
 }
 
-phoneInput.addEventListener("input", (e)=>{
-    e.target.value = formatPhone(e.target.value);
-});
+if(phoneInput){
+  phoneInput.addEventListener("input", (e)=>{
+      e.target.value = formatPhone(e.target.value);
+  });
 
-document.getElementById("profile-form").addEventListener("submit", ()=>{
-    let d = phoneInput.value.replace(/\D/g,'');
-    if(d.length===9){
-        phoneInput.value = "+995" + d;
-    }
-});
+  document.getElementById("profile-form").addEventListener("submit", ()=>{
+      let d = phoneInput.value.replace(/\D/g,'');
+      if(d.length===9){
+          phoneInput.value = "+995" + d;
+      }
+  });
+}
 
-/* =========================
-   MAP
-========================= */
-let lat = parseFloat("{{ user.profile.latitude|default:41.7151 }}");
-let lng = parseFloat("{{ user.profile.longitude|default:44.8271 }}");
+/* ================= SAFE MAP INIT ================= */
+let lat = parseFloat("{{ p_form.latitude.value|default:41.7151 }}");
+let lng = parseFloat("{{ p_form.longitude.value|default:44.8271 }}");
+
+if (isNaN(lat)) lat = 41.7151;
+if (isNaN(lng)) lng = 44.8271;
 
 const map = L.map('map').setView([lat, lng], 13);
 
@@ -135,6 +169,7 @@ map.on('click', e=>{
 });
 
 setTimeout(()=>map.invalidateSize(), 300);
+
 </script>
 
 {% endblock %}

@@ -102,8 +102,24 @@ class PostDetailView(DetailView):
         ).order_by('-date_posted')
 
         context['images'] = PostImage.objects.filter(post=post)
-        return context
 
+
+
+        return context
+    
+
+class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Post
+    form_class = PostForm
+    template_name = 'blog/post_form.html'
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        return super().form_valid(form)
+
+    def test_func(self):
+        post = self.get_object()
+        return self.request.user == post.author
 
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
@@ -111,42 +127,25 @@ class PostCreateView(LoginRequiredMixin, CreateView):
     template_name = 'blog/post_form.html'
 
     def form_valid(self, form):
+        print("FORM VALID TRIGGERED")
+
         form.instance.author = self.request.user
-        response = super().form_valid(form)
+        self.object = form.save()
 
-        # Handle multiple images
-        for f in self.request.FILES.getlist('images'):
-            PostImage.objects.create(post=self.object, image=f)
+        print("CREATED POST ID:", self.object.id)
 
-        return response
-
-
-class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
-    model = Post
-    fields = [
-        'title',
-        'content',
-        'price',
-        'category',     
-        'address',
-        'latitude',
-        'longitude'
-    ]
-    template_name = 'blog/post_form.html'
-
-    def form_valid(self, form):
-        form.instance.author = self.request.user
-        response = super().form_valid(form)
-
+        main_image = self.request.FILES.get('main_image')
+        if main_image:
+            PostImage.objects.create(post=self.object, image=main_image)
 
         for f in self.request.FILES.getlist('images'):
             PostImage.objects.create(post=self.object, image=f)
 
-        return response
+        return redirect(self.object.get_absolute_url())
 
-    def test_func(self):
-        return self.request.user == self.get_object().author
-
+    def form_invalid(self, form):
+        print("FORM INVALID:", form.errors)
+        return super().form_invalid(form)
 
 class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Post

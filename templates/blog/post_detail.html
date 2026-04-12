@@ -1,83 +1,121 @@
 {% extends "blog/base.html" %}
+{% load static %}
 {% block content %}
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <div class="site-container">
 
   <div class="card-modern" style="padding:20px;">
 
-    <!-- FIXED 2 COLUMN LAYOUT -->
     <div class="post-layout">
 
-      <!-- LEFT IMAGE -->
+      <!-- LEFT -->
       <div class="post-left">
 
         <div class="post-image-box">
           {% if object.image %}
             <img id="mainImage" src="{{ object.image.url }}" onclick="openModal(0)">
+          {% elif images %}
+            <img id="mainImage" src="{{ images.0.image.url }}" onclick="openModal(0)">
+          {% else %}
+            <div style="color:var(--muted);">No Image</div>
           {% endif %}
         </div>
 
         <div class="post-thumbs">
+          {% if object.image %}
+            <img src="{{ object.image.url }}" onclick="setMainImage('{{ object.image.url }}', 0)">
+          {% endif %}
+
           {% for img in images %}
-            <img src="{{ img.image.url }}"
-                 onclick="setMainImage('{{ img.image.url }}', {{ forloop.counter0 }})">
+            {% if img.image %}
+              <img src="{{ img.image.url }}"
+                   onclick="setMainImage('{{ img.image.url }}', {{ forloop.counter0 }})">
+            {% endif %}
           {% endfor %}
         </div>
 
       </div>
 
-      <!-- RIGHT INFO -->
+      <!-- RIGHT -->
       <div class="post-right">
 
         <h2 style="font-weight:800;">{{ object.title }}</h2>
 
         {% if object.price %}
-          <h3 style="color:var(--accent);">${{ object.price }}</h3>
+          <h3 style="color:var(--accent); margin:0;">
+            $<span id="priceUsd">{{ object.price }}</span>
+            <span id="priceGel" style="color:var(--muted); font-size:14px;"></span>
+          </h3>
         {% endif %}
 
         <p style="color:var(--muted);">{{ object.content }}</p>
 
         <hr>
 
-        <!-- ACTIONS -->
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <!-- SELLER -->
+        <div class="seller-mini-card">
 
-          {% if object.author != user %}
+          <a href="{% url 'user-profile' object.author.username %}" class="seller-mini">
 
-            {% if user.is_authenticated %}
-              <a href="{% url 'chat-view' object.id object.author.id %}" class="btn-modern-save">
-                💬 Message
-              </a>
-
-              <a href="mailto:{{ object.author.email }}" class="btn-modern-logout">
-                📧 Email
-              </a>
-
-              {% if object.author.profile.phone_number %}
-              <button class="btn-modern-logout"
-                      onclick="revealNumber(this, '{{ object.author.profile.phone_number }}')">
-                📞 Show Phone
-              </button>
-              {% endif %}
+            {% if object.author.profile.image %}
+              <img src="{{ object.author.profile.image.url }}" class="seller-mini-avatar">
             {% else %}
-              <a href="{% url 'login' %}" class="btn-modern-save">Login</a>
+              <img src="{% static 'users/default.jpg' %}" class="seller-mini-avatar">
             {% endif %}
 
-          {% else %}
-            <span style="color:var(--muted);">Your listing</span>
-          {% endif %}
+            <div class="seller-mini-info">
+              <strong>{{ object.author.username }}</strong>
+              <span>View profile</span>
+            </div>
+
+          </a>
+
+          <div class="seller-actions">
+
+            {% if object.author != user %}
+
+              {% if user.is_authenticated %}
+
+                {% if object.id and object.author.id %}
+                <a href="{% url 'chat-view' object.id object.author.id %}" class="btn-modern-save">
+                  💬 Message
+                </a>
+                {% endif %}
+
+                <a href="mailto:{{ object.author.email }}" class="btn-modern-logout">
+                  📧 Email
+                </a>
+
+                {% if object.author.profile.phone_number %}
+                  <button class="btn-modern-logout"
+                          onclick="revealNumber(this,'{{ object.author.profile.phone_number }}')">
+                    📞 Phone
+                  </button>
+                {% endif %}
+
+              {% else %}
+                <a href="{% url 'login' %}" class="btn-modern-save">Login</a>
+              {% endif %}
+
+            {% else %}
+              <span style="color:var(--muted);">This is your listing</span>
+            {% endif %}
+
+          </div>
 
         </div>
 
-        <!-- LOCATION -->
         {% if object.author.profile.address %}
-          <p style="margin-top:15px;">
-            📍 {{ object.author.profile.address }}
-          </p>
+          <p style="margin-top:15px;">📍 {{ object.author.profile.address }}</p>
         {% endif %}
 
-        <!-- MAP -->
-        <div id="map"></div>
+        <button class="btn-modern-save" onclick="toggleMap()">📍 Show Map</button>
+
+        <div id="mapBox" style="display:none; margin-top:10px;">
+          <div id="map" style="height:300px;border-radius:10px;"></div>
+        </div>
 
       </div>
 
@@ -85,76 +123,98 @@
   </div>
 </div>
 
-<!-- ================= MODAL ================= -->
+<!-- MODAL -->
 <div id="imageModal" class="image-modal">
-    <span class="close-modal" onclick="closeModal()">&times;</span>
-
-    <button class="nav-btn left" onclick="prevImage()">❮</button>
-    <img id="modalImg">
-    <button class="nav-btn right" onclick="nextImage()">❯</button>
+  <span class="close-modal" onclick="closeModal()">&times;</span>
+  <button class="nav-btn left" onclick="prevImage()">❮</button>
+  <img id="modalImg">
+  <button class="nav-btn right" onclick="nextImage()">❯</button>
 </div>
 
+<!-- JS -->
 <script>
 let images = [
   {% if object.image %}"{{ object.image.url }}",{% endif %}
-  {% for img in images %}"{{ img.image.url }}",{% endfor %}
+  {% for img in images %}
+    {% if img.image %}"{{ img.image.url }}",{% endif %}
+  {% endfor %}
 ];
 
 let currentIndex = 0;
 
 function setMainImage(src, index){
-    document.getElementById("mainImage").src = src;
-    currentIndex = index;
+  document.getElementById("mainImage").src = src;
+  currentIndex = index;
 }
 
 function openModal(index){
-    currentIndex = index;
-    document.getElementById("imageModal").style.display = "flex";
-    document.getElementById("modalImg").src = images[currentIndex];
+  if(!images.length) return;
+  currentIndex = index;
+  document.getElementById("imageModal").style.display = "flex";
+  document.getElementById("modalImg").src = images[currentIndex];
 }
 
 function closeModal(){
-    document.getElementById("imageModal").style.display = "none";
+  document.getElementById("imageModal").style.display = "none";
 }
 
 function nextImage(){
-    currentIndex = (currentIndex + 1) % images.length;
-    document.getElementById("modalImg").src = images[currentIndex];
+  currentIndex = (currentIndex + 1) % images.length;
+  document.getElementById("modalImg").src = images[currentIndex];
 }
 
 function prevImage(){
-    currentIndex = (currentIndex - 1 + images.length) % images.length;
-    document.getElementById("modalImg").src = images[currentIndex];
+  currentIndex = (currentIndex - 1 + images.length) % images.length;
+  document.getElementById("modalImg").src = images[currentIndex];
 }
 
 document.addEventListener("keydown", function(e){
+  if(document.getElementById("imageModal").style.display === "flex"){
     if(e.key === "Escape") closeModal();
     if(e.key === "ArrowRight") nextImage();
     if(e.key === "ArrowLeft") prevImage();
+  }
 });
 
 function revealNumber(btn, num){
-    btn.outerHTML = `<a href="tel:${num}" class="btn-modern-save">📞 ${num}</a>`;
+  btn.outerHTML = `<a href="tel:${num}" class="btn-modern-save">📞 ${num}</a>`;
 }
-</script>
 
-<!-- MAP -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+function updatePrice(){
+  let usd = parseFloat("{{ object.price|default:0 }}");
+  let gel = (usd * 2.7).toFixed(2);
+  if(usd > 0){
+    document.getElementById("priceGel").innerText = " / " + gel + " GEL";
+  }
+}
+updatePrice();
 
-<script>
-let lat = parseFloat("{{ object.author.profile.latitude|default:41.7151 }}");
-let lng = parseFloat("{{ object.author.profile.longitude|default:44.8271 }}");
+/* MAP */
+let map;
 
-const map = L.map('map').setView([lat, lng], 13);
+function toggleMap(){
+  const box = document.getElementById("mapBox");
+  if(box.style.display === "block"){
+    box.style.display = "none";
+    return;
+  }
+  box.style.display = "block";
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: ''
-}).addTo(map);
+  setTimeout(()=>{
+    if(!map){
+      let lat = parseFloat("{{ object.author.profile.latitude|default:41.7151 }}");
+      let lng = parseFloat("{{ object.author.profile.longitude|default:44.8271 }}");
 
-L.marker([lat, lng]).addTo(map);
+      map = L.map('map').setView([lat, lng], 13);
 
-setTimeout(()=>map.invalidateSize(), 300);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+      L.marker([lat, lng]).addTo(map);
+    } else {
+      map.invalidateSize();
+    }
+  }, 200);
+}
 </script>
 
 {% endblock %}

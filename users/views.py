@@ -1,7 +1,9 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+
+from blog.models import Post
 
 from .forms import UserRegisterForm, UserUpdateForm, ProfileUpdateForm
 
@@ -59,6 +61,16 @@ def profile(request):
         'p_form': p_form
     })
 
+
+def public_profile(request, username):
+    profile_user = get_object_or_404(User, username=username)
+
+    posts = Post.objects.filter(author=profile_user).order_by('-date_posted')
+
+    return render(request, "users/public_profile.html", {
+        "profile_user": profile_user,
+        "user_posts": posts
+    })
 
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])

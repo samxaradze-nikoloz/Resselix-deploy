@@ -1,0 +1,105 @@
+{% extends "blog/base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="site-container">
+
+  <!-- ================= PROFILE HEADER ================= -->
+  <div class="card-modern" style="padding:20px;">
+
+    <div style="display:flex; gap:15px; align-items:center;">
+
+      {% if profile_user.profile.image %}
+        <img src="{{ profile_user.profile.image.url }}"
+             style="width:80px;height:80px;border-radius:50%;object-fit:cover;">
+      {% else %}
+        <img src="{% static 'users/default.jpg' %}"
+             style="width:80px;height:80px;border-radius:50%;object-fit:cover;">
+      {% endif %}
+
+      <div>
+        <h2>{{ profile_user.username }}</h2>
+        <p>{{ profile_user.email }}</p>
+        <p style="color:gray;">
+          Member since {{ profile_user.date_joined|date:"F Y" }}
+        </p>
+      </div>
+
+    </div>
+
+    <!-- ================= ACTION BUTTONS ================= -->
+    <div style="margin-top:15px; display:flex; gap:10px; flex-wrap:wrap;">
+
+      {% if profile_user.profile.phone_number %}
+      <button class="btn-modern-save"
+              onclick="this.outerHTML='<span>📞 {{ profile_user.profile.phone_number }}</span>'">
+        Show Phone
+      </button>
+      {% endif %}
+
+      <a class="btn-modern-save"
+         href="mailto:{{ profile_user.email }}">
+        📧 Email
+      </a>
+
+      {% if user.is_authenticated %}
+      <a class="btn-modern-save"
+         href="{% url 'chat-view' 0 profile_user.id %}">
+        💬 Message
+      </a>
+      {% else %}
+      <a class="btn-modern-save" href="{% url 'login' %}">
+        Login to Message
+      </a>
+      {% endif %}
+
+    </div>
+
+  </div>
+
+  <!-- ================= LISTINGS ================= -->
+  <h3 style="margin-top:30px;">Listings</h3>
+
+  <div class="grid">
+
+    {% for post in user_posts %}
+
+      <a href="{% url 'post-detail' post.id %}"
+         class="card-modern"
+         style="text-decoration:none; color:inherit;">
+
+        <!-- IMAGE FIX (IMPORTANT) -->
+        <div class="image-box">
+
+          {% with first_img=post.images.first %}
+            {% if first_img %}
+              <img src="{{ first_img.image.url }}" alt="">
+            {% else %}
+              <div class="no-img">No Image</div>
+            {% endif %}
+          {% endwith %}
+
+        </div>
+
+        <!-- CONTENT -->
+        <div class="content">
+
+          <h4>{{ post.title }}</h4>
+
+          <p style="color:var(--accent); font-weight:700;">
+            ${{ post.price }}
+          </p>
+
+        </div>
+
+      </a>
+
+    {% empty %}
+      <p style="color:gray;">No listings yet.</p>
+    {% endfor %}
+
+  </div>
+
+</div>
+
+{% endblock %}

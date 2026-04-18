@@ -10,7 +10,7 @@
 
     <div class="post-layout">
 
-      <!-- LEFT -->
+
       <div class="post-left">
 
         <div class="post-image-box">
@@ -123,7 +123,7 @@
   </div>
 </div>
 
-<!-- MODAL -->
+
 <div id="imageModal" class="image-modal">
   <span class="close-modal" onclick="closeModal()">&times;</span>
   <button class="nav-btn left" onclick="prevImage()">❮</button>
@@ -131,7 +131,10 @@
   <button class="nav-btn right" onclick="nextImage()">❯</button>
 </div>
 
-<!-- JS -->
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+
 <script>
 let images = [
   {% if object.image %}"{{ object.image.url }}",{% endif %}
@@ -194,26 +197,38 @@ let map;
 
 function toggleMap(){
   const box = document.getElementById("mapBox");
+
   if(box.style.display === "block"){
     box.style.display = "none";
     return;
   }
+
   box.style.display = "block";
 
-  setTimeout(()=>{
-    if(!map){
-      let lat = parseFloat("{{ object.author.profile.latitude|default:41.7151 }}");
-      let lng = parseFloat("{{ object.author.profile.longitude|default:44.8271 }}");
+  let lat = parseFloat("{{ object.author.profile.latitude|default:41.7151 }}");
+  let lng = parseFloat("{{ object.author.profile.longitude|default:44.8271 }}");
 
-      map = L.map('map').setView([lat, lng], 13);
+  if(!map){
+    map = L.map('map', {
+      preferCanvas: true,
+      zoomAnimation: false,
+      fadeAnimation: false,
+      markerZoomAnimation: false
+    }).setView([lat, lng], 13);
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      updateWhenIdle: true,
+      keepBuffer: 2
+    }).addTo(map);
 
-      L.marker([lat, lng]).addTo(map);
-    } else {
-      map.invalidateSize();
-    }
-  }, 200);
+    L.marker([lat, lng]).addTo(map);
+  }
+
+  // 🔥 FIX: force correct rendering
+  setTimeout(() => {
+    map.invalidateSize(true);
+  }, 0);
 }
 </script>
 

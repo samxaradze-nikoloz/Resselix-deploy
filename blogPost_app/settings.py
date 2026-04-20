@@ -139,9 +139,7 @@ AUTHENTICATION_BACKENDS = (
 )
 
 
-# ==============================
-# INTERNATIONALIZATION
-# ==============================
+
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
@@ -149,9 +147,6 @@ USE_I18N = True
 USE_TZ = True
 
 
-# ==============================
-# STATIC / MEDIA
-# ==============================
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
@@ -160,26 +155,20 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 
-# ==============================
-# CRISPY FORMS
-# ==============================
+
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap4"
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 
 
-# ==============================
-# LOGIN
-# ==============================
+
 
 LOGIN_REDIRECT_URL = 'blog-home'
 LOGOUT_REDIRECT_URL = 'blog-home'
 LOGIN_URL = 'login'
 
 
-# ==============================
-# EMAIL (GMAIL SMTP)
-# ==============================
+
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
@@ -190,9 +179,7 @@ EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 
 
-# ==============================
-# REST FRAMEWORK
-# ==============================
+
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -204,15 +191,13 @@ REST_FRAMEWORK = {
 
 
 
-# settings.py
 
-# Automatically create a Django user from the Google data
 SOCIALACCOUNT_AUTO_SIGNUP = True 
 
-# Use the Google email as the username if possible
+
 ACCOUNT_ADAPTER = 'allauth.account.adapter.DefaultAccountAdapter'
 SOCIALACCOUNT_ADAPTER = 'allauth.socialaccount.adapter.DefaultSocialAccountAdapter'
 
-# Ensure the email is verified automatically since Google already verified it
+
 SOCIALACCOUNT_EMAIL_VERIFICATION = "none" 
 SOCIALACCOUNT_EMAIL_REQUIRED = True

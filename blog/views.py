@@ -13,7 +13,7 @@ from .models import Post, PostImage, CartItem
 from users.models import Message, Comment
 
 
-# --- BLOG VIEWS ---
+
 
 from django.db.models import Q
 from collections import OrderedDict
@@ -161,7 +161,7 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         return self.request.user == self.get_object().author
 
 
-# --- CART VIEWS ---
+
 
 @login_required
 def add_to_cart(request, pk):
@@ -192,7 +192,7 @@ def remove_from_cart(request, pk):
     return redirect('cart-detail')
 
 
-# --- MESSAGING ---
+
 
 @login_required
 def chat_view(request, post_id, user_id):
@@ -247,11 +247,11 @@ def add_comment(request, pk):
     return redirect('post-detail', pk=pk)
 
 
-# --- OTHER PAGES ---
+
 
 @login_required
 def my_purchases(request):
-    # Placeholder for future order functionality
+
     return render(request, 'blog/my_purchases.html', {'orders': []})
 
 

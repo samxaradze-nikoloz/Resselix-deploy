@@ -17,13 +17,13 @@ class Post(models.Model):
     ]
 
     SUBCATEGORY_CHOICES = [
-        # Accessories
+
         ('phone_cases', 'Phone Cases'),
         ('watches', 'Watches'),
         ('bags', 'Bags'),
         ('jewelry', 'Jewelry'),
 
-        # Accounts
+   
         ('steam', 'Steam Account'),
         ('epic', 'Epic Games Account'),
         ('riot', 'Riot Games Account'),
@@ -41,12 +41,12 @@ class Post(models.Model):
         ('women', 'Women Fashion'),
         ('shoes', 'Shoes'),
 
-        # Electronics
+
         ('phones', 'Phones'),
         ('laptops', 'Laptops'),
         ('tech_accessories', 'Tech Accessories'),
 
-        # Home
+
         ('furniture', 'Furniture'),
         ('decor', 'Decorations'),
     ]

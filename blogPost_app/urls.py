@@ -10,13 +10,13 @@ from django.views.generic import RedirectView
 urlpatterns = [
     path('admin/', admin.site.urls),
     
-    # Users
+  
     path('register/', user_views.register, name='register'),
     path('profile/', user_views.profile, name='profile'),
     path('login/', auth_views.LoginView.as_view(template_name='users/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(template_name='users/logout.html'), name='logout'),
     
-    # Password reset
+    
     path('password-reset/',
          auth_views.PasswordResetView.as_view(template_name='users/password_reset.html'),
          name='password_reset'),
@@ -30,12 +30,11 @@ urlpatterns = [
          auth_views.PasswordResetCompleteView.as_view(template_name='users/password_reset_complete.html'),
          name='password_reset_complete'),
     
-    # API
+
     path('api/login/', obtain_auth_token, name='api-token-auth'), 
     path('api/register/', user_views.register_api, name='api-register'),
     path('api/profile/', user_views.ProfileDetailAPI.as_view(), name='api-profile-detail'),
 
-    # Include blog app URLs
     path('', include('blog.urls')),
     path('accounts/', include('allauth.urls')),
     path('favicon.ico', RedirectView.as_view(url='/static/blog/logo.png')),

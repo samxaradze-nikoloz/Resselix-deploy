@@ -11,7 +11,7 @@
 
         <div class="card mb-3 p-3 d-flex flex-row justify-content-between align-items-center">
 
-            <!-- ITEM INFO -->
+
             <div>
                 <h5 class="mb-1">{{ item.post.title }}</h5>
 
@@ -24,16 +24,14 @@
                 </div>
             </div>
 
-            <!-- ACTION BUTTONS -->
             <div class="d-flex gap-2">
 
-                <!-- VIEW LISTING -->
+  
                 <a href="{% url 'post-detail' item.post.id %}"
                    class="btn btn-outline-primary btn-sm">
                     View Listing
                 </a>
 
-                <!-- REMOVE -->
                 <button class="btn btn-danger btn-sm"
                         onclick="openRemoveModal('{{ item.id }}')">
                     Remove
@@ -52,7 +50,7 @@
 
     {% else %}
 
-        <!-- EMPTY CART -->
+
         <div class="text-center py-5">
 
             <h4>Your cart is empty 🛒</h4>
@@ -71,7 +69,7 @@
 
 </div>
 
-<!-- REMOVE MODAL -->
+
 <div id="removeModal" class="cart-modal">
     <div class="cart-modal-box">
 

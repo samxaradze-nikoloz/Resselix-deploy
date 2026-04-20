@@ -6,123 +6,104 @@
 
 <div class="site-container">
 
-  <div class="card-modern" style="padding:20px;">
+  <div class="post-layout">
 
-    <div class="post-layout">
+    <div class="post-left">
 
-
-      <div class="post-left">
-
-        <div class="post-image-box">
-          {% if object.image %}
-            <img id="mainImage" src="{{ object.image.url }}" onclick="openModal(0)">
-          {% elif images %}
-            <img id="mainImage" src="{{ images.0.image.url }}" onclick="openModal(0)">
-          {% else %}
-            <div style="color:var(--muted);">No Image</div>
-          {% endif %}
-        </div>
-
-        <div class="post-thumbs">
-          {% if object.image %}
-            <img src="{{ object.image.url }}" onclick="setMainImage('{{ object.image.url }}', 0)">
-          {% endif %}
-
-          {% for img in images %}
-            {% if img.image %}
-              <img src="{{ img.image.url }}"
-                   onclick="setMainImage('{{ img.image.url }}', {{ forloop.counter0 }})">
-            {% endif %}
-          {% endfor %}
-        </div>
-
+      <div class="post-image-box">
+        {% if object.image %}
+          <img id="mainImage" src="{{ object.image.url }}" onclick="openModal(0)">
+        {% elif images %}
+          <img id="mainImage" src="{{ images.0.image.url }}" onclick="openModal(0)">
+        {% else %}
+          <div style="color:var(--muted);">No Image</div>
+        {% endif %}
       </div>
 
-      <!-- RIGHT -->
-      <div class="post-right">
-
-        <h2 style="font-weight:800;">{{ object.title }}</h2>
-
-        {% if object.price %}
-          <h3 style="color:var(--accent); margin:0;">
-            $<span id="priceUsd">{{ object.price }}</span>
-            <span id="priceGel" style="color:var(--muted); font-size:14px;"></span>
-          </h3>
+      <div class="post-thumbs">
+        {% if object.image %}
+          <img src="{{ object.image.url }}" onclick="setMainImage('{{ object.image.url }}', 0)">
         {% endif %}
+        {% for img in images %}
+          {% if img.image %}
+            <img src="{{ img.image.url }}"
+                 onclick="setMainImage('{{ img.image.url }}', {{ forloop.counter0 }})">
+          {% endif %}
+        {% endfor %}
+      </div>
 
+      <div style="margin-top:20px;">
+        <h3>Description</h3>
         <p style="color:var(--muted);">{{ object.content }}</p>
-
-        <hr>
-
-        <!-- SELLER -->
-        <div class="seller-mini-card">
-
-          <a href="{% url 'user-profile' object.author.username %}" class="seller-mini">
-
-            {% if object.author.profile.image %}
-              <img src="{{ object.author.profile.image.url }}" class="seller-mini-avatar">
-            {% else %}
-              <img src="{% static 'users/default.jpg' %}" class="seller-mini-avatar">
-            {% endif %}
-
-            <div class="seller-mini-info">
-              <strong>{{ object.author.username }}</strong>
-              <span>View profile</span>
-            </div>
-
-          </a>
-
-          <div class="seller-actions">
-
-            {% if object.author != user %}
-
-              {% if user.is_authenticated %}
-
-                {% if object.id and object.author.id %}
-                <a href="{% url 'chat-view' object.id object.author.id %}" class="btn-modern-save">
-                  💬 Message
-                </a>
-                {% endif %}
-
-                <a href="mailto:{{ object.author.email }}" class="btn-modern-logout">
-                  📧 Email
-                </a>
-
-                {% if object.author.profile.phone_number %}
-                  <button class="btn-modern-logout"
-                          onclick="revealNumber(this,'{{ object.author.profile.phone_number }}')">
-                    📞 Phone
-                  </button>
-                {% endif %}
-
-              {% else %}
-                <a href="{% url 'login' %}" class="btn-modern-save">Login</a>
-              {% endif %}
-
-            {% else %}
-              <span style="color:var(--muted);">This is your listing</span>
-            {% endif %}
-
-          </div>
-
-        </div>
-
-        {% if object.author.profile.address %}
-          <p style="margin-top:15px;">📍 {{ object.author.profile.address }}</p>
-        {% endif %}
-
-        <button class="btn-modern-save" onclick="toggleMap()">📍 Show Map</button>
-
-        <div id="mapBox" style="display:none; margin-top:10px;">
-          <div id="map" style="height:300px;border-radius:10px;"></div>
-        </div>
-
       </div>
 
     </div>
+
+    <div class="post-right card-modern" style="padding:20px;">
+
+      <h2 style="font-weight:800;">{{ object.title }}</h2>
+
+      {% if object.price %}
+        <div style="margin:10px 0;">
+          <h3 style="font-size:1.8rem; font-weight:700; color:var(--accent); margin:0;">
+            $<span id="priceUsd">{{ object.price }}</span>
+          </h3>
+          <span id="priceGel" style="color:var(--muted); font-size:14px;"></span>
+        </div>
+      {% endif %}
+
+      <hr>
+
+      <div class="seller-mini-card">
+        <a href="{% url 'user-profile' object.author.username %}" class="seller-mini">
+          {% if object.author.profile.image %}
+            <img src="{{ object.author.profile.image.url }}" class="seller-mini-avatar">
+          {% else %}
+            <img src="{% static 'users/default.jpg' %}" class="seller-mini-avatar">
+          {% endif %}
+          <div class="seller-mini-info">
+            <strong>{{ object.author.username }}</strong>
+            <span>View profile</span>
+          </div>
+        </a>
+
+        <div class="seller-actions" style="margin-top:12px;">
+          {% if object.author != user %}
+            {% if user.is_authenticated %}
+              {% if object.id and object.author.id %}
+              <a href="{% url 'chat-view' object.id object.author.id %}" class="btn-modern-save">
+                💬 Message Seller
+              </a>
+              {% endif %}
+              <a href="mailto:{{ object.author.email }}" class="btn-modern-logout">📧 Email</a>
+              {% if object.author.profile.phone_number %}
+                <button class="btn-modern-logout"
+                        onclick="revealNumber(this,'{{ object.author.profile.phone_number }}')">
+                  📞 Phone
+                </button>
+              {% endif %}
+            {% else %}
+              <a href="{% url 'login' %}" class="btn-modern-save">Login to Contact</a>
+            {% endif %}
+          {% else %}
+            <span style="color:var(--muted);">This is your listing</span>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if object.author.profile.address %}
+        <p style="margin-top:15px;">📍 {{ object.author.profile.address }}</p>
+      {% endif %}
+
+      <button class="btn-modern-save" onclick="toggleMap()">📍 Show Map</button>
+      <div id="mapBox" style="display:none; margin-top:10px;">
+        <div id="map" style="height:300px;border-radius:10px;"></div>
+      </div>
+
+    </div>
+
   </div>
 </div>
-
 
 <div id="imageModal" class="image-modal">
   <span class="close-modal" onclick="closeModal()">&times;</span>
@@ -131,10 +112,7 @@
   <button class="nav-btn right" onclick="nextImage()">❯</button>
 </div>
 
-
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-
 <script>
 let images = [
   {% if object.image %}"{{ object.image.url }}",{% endif %}
@@ -180,7 +158,10 @@ document.addEventListener("keydown", function(e){
 });
 
 function revealNumber(btn, num){
-  btn.outerHTML = `<a href="tel:${num}" class="btn-modern-save">📞 ${num}</a>`;
+  btn.innerHTML = `📞 ${num}`;
+  btn.onclick = null;
+  btn.className = "btn-modern-save";
+  btn.setAttribute("onclick", `window.location.href='tel:${num}'`);
 }
 
 function updatePrice(){
@@ -192,7 +173,6 @@ function updatePrice(){
 }
 updatePrice();
 
-/* MAP */
 let map;
 
 function toggleMap(){
@@ -209,26 +189,20 @@ function toggleMap(){
   let lng = parseFloat("{{ object.author.profile.longitude|default:44.8271 }}");
 
   if(!map){
-    map = L.map('map', {
-      preferCanvas: true,
-      zoomAnimation: false,
-      fadeAnimation: false,
-      markerZoomAnimation: false
-    }).setView([lat, lng], 13);
+    map = L.map('map').setView([lat, lng], 13);
 
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      updateWhenIdle: true,
-      keepBuffer: 2
+      maxZoom: 19
     }).addTo(map);
 
     L.marker([lat, lng]).addTo(map);
+  } else {
+    map.setView([lat, lng], 13);
   }
 
-  // 🔥 FIX: force correct rendering
   setTimeout(() => {
-    map.invalidateSize(true);
-  }, 0);
+    map.invalidateSize();
+  }, 200);
 }
 </script>
 

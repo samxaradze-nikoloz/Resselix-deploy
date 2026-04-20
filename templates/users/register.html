@@ -1,39 +1,45 @@
 {% extends "blog/base.html" %}
 {% load crispy_forms_tags %}
-{% load socialaccount %} {% block content %}
-    <div class="content-section shadow-sm p-4 bg-white rounded">
-        <form method="POST">
-            {% csrf_token %}
-            <fieldset class="form-group">
-                <legend class="border-bottom mb-4 font-weight-bold">Join Today</legend>
-                {{ form|crispy }}
-            </fieldset>
+{% load socialaccount %}
+{% load static %}
+<head>
+    <link rel="stylesheet" href="{% static 'users/main.css' %}">
+</head>
+{% block content %}
 
-            <div class="form-group">
-                <button class="btn btn-info w-100 font-weight-bold" type="submit">
+<div class="container">
+    <div class="auth-wrapper">
+        <div class="auth-card">
+
+            <div class="auth-title">Create Your Account</div>
+
+            <form method="POST">
+                {% csrf_token %}
+                {{ form|crispy }}
+
+                <button type="submit" class="btn-modern-save mt-3">
                     Sign Up
                 </button>
+            </form>
+
+            <div class="auth-divider">
+                <hr>
+                <span>OR</span>
+                <hr>
             </div>
-        </form>
 
-        <div class="d-flex align-items-center my-4">
-            <hr class="flex-grow-1">
-            <span class="mx-3 text-muted">OR</span>
-            <hr class="flex-grow-1">
-        </div>
-
-        <div class="form-group">
-            <a href="{% provider_login_url 'google' %}" class="btn btn-outline-dark w-100 d-flex align-items-center justify-content-center py-2">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Logo.svg" alt="Google" style="width: 18px; margin-right: 10px;">
-                Continue with Google
+            <a href="{% provider_login_url 'google' %}" class="btn-google">
+                <img src="{% static 'images/google.png' %}" alt="Google">
+                <span>Sign in with Google</span>
             </a>
-        </div>
 
-        <div class="border-top pt-3 mt-4 text-center">
-            <small class="text-muted">
-                Already Have An Account?
-                <a class="ml-2 font-weight-bold" href="{% url 'login' %}">Sign In</a>
-            </small>
+            <div class="auth-footer">
+                Already have an account?
+                <a href="{% url 'login' %}">Sign In</a>
+            </div>
+
         </div>
     </div>
-{% endblock content %}
+</div>
+
+{% endblock %}

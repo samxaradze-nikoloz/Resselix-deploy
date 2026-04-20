@@ -18,16 +18,13 @@
       {% endif %}
 
       <label>Title</label>
-      {{ form.title }}
-      <br>
+      {{ form.title }}<br>
 
       <label>Price</label>
-      {{ form.price }}
-      <br>
+      {{ form.price }}<br>
 
       <label>Description</label>
-      {{ form.content }}
-      <br>
+      {{ form.content }}<br>
 
       <label>Category</label>
       <select name="category" id="id_category" class="form-control" required>
@@ -35,26 +32,21 @@
         {% for value, label in form.fields.category.choices %}
             {% if value %} <option value="{{ value }}">{{ label }}</option> {% endif %}
         {% endfor %}
-      </select>
-      <br>
+      </select><br>
 
       <label>Subcategory</label>
       <select name="subcategory" id="id_subcategory" class="form-control" required>
         <option value="">Select subcategory</option>
-      </select>
-      <br>
+      </select><br>
 
       <label>Main Image</label>
-      <input type="file" name="main_image" class="form-control" required>
-      <br>
+      <input type="file" name="main_image" class="form-control" required><br>
 
       <label>Extra Images (Hold Ctrl to select multiple)</label>
-      <input type="file" name="images" class="form-control" multiple>
-      <br>
+      <input type="file" name="images" class="form-control" multiple><br>
 
       <label>Address</label>
-      {{ form.address }}
-      <br>
+      {{ form.address }}<br>
 
       <label>Pick Location</label>
       <div id="map" style="height:300px; border-radius:10px; margin-bottom: 10px;"></div>
@@ -72,7 +64,6 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-// --- LEAFLET MAP LOGIC ---
 let lat = 41.7151;
 let lng = 44.8271;
 
@@ -81,16 +72,26 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
 let marker = L.marker([lat, lng], {draggable:true}).addTo(map);
 
-// Django auto-assigns IDs like 'id_latitude' to form fields
 const latInput = document.getElementById("id_latitude");
 const lngInput = document.getElementById("id_longitude");
+const addrInput = document.getElementById("id_address");
 
 function updateCoords(l, g){
   latInput.value = l.toFixed(6);
   lngInput.value = g.toFixed(6);
+
+  fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${l}&lon=${g}`)
+    .then(res => res.json())
+    .then(data => {
+      if(data && data.address){
+        let suburb = data.address.suburb || data.address.neighbourhood || "";
+        let road = data.address.road || "";
+        let shortAddr = [suburb, road].filter(Boolean).join(", ");
+        addrInput.value = shortAddr;
+      }
+    });
 }
 
-// Initial values
 updateCoords(lat, lng);
 
 marker.on('dragend', function(){
@@ -105,8 +106,6 @@ map.on('click', function(e){
 
 setTimeout(() => map.invalidateSize(), 300);
 
-// --- DYNAMIC SUBCATEGORIES ---
-// IMPORTANT: These strings must match SUBCATEGORY_CHOICES in models.py exactly!
 const subcategories = {
   electronics: [["phones", "Phones"], ["laptops", "Laptops"], ["tech_accessories", "Tech Accessories"]],
   fashion: [["men", "Men Fashion"], ["women", "Women Fashion"], ["shoes", "Shoes"]],
@@ -120,7 +119,6 @@ const subcategories = {
 document.getElementById("id_category").addEventListener("change", function () {
   const subSelect = document.getElementById("id_subcategory");
   subSelect.innerHTML = "<option value=''>Select subcategory</option>";
-
   const choices = subcategories[this.value];
   if (choices) {
     choices.forEach(pair => {

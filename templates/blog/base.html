@@ -11,6 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 <link rel="stylesheet" href="{% static 'blog/main.css' %}">
+<link rel="stylesheet" href="{% static 'users/main.css' %}">
 
 <title>Resselix{% if title %} - {{ title }}{% endif %}</title>
 </head>
@@ -92,6 +93,12 @@
       {{ message }}
     </div>
   {% endfor %}
+{% endif %}
+
+{% if query %}
+  <div class="alert alert-info mt-3">
+    Showing results for "<strong>{{ query }}</strong>"
+  </div>
 {% endif %}
 
 {% block content %}{% endblock %}

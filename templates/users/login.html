@@ -14,24 +14,21 @@
         <form method="POST">
             {% csrf_token %}
 
-            <fieldset class="form-group">
+            <fieldset>
                 {{ form|crispy }}
             </fieldset>
 
-            <button class="btn btn-main w-100" type="submit">
+            <button class="btn-main" type="submit">
                 Login
             </button>
-
         </form>
 
-        <!-- Divider -->
         <div class="divider">
             <span>OR</span>
         </div>
 
-        <!-- Google Login -->
         <a href="{% provider_login_url 'google' %}" class="google-btn">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Logo.svg">
+            <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google">
             Continue with Google
         </a>
 

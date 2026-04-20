@@ -23,6 +23,13 @@ from collections import OrderedDict
 from django.views.generic import ListView
 from .models import Post
 
+
+from rapidfuzz import process
+from django.db.models import Q
+from django.views.generic import ListView
+from collections import OrderedDict
+from .models import Post
+
 class PostListView(ListView):
     model = Post
     template_name = 'blog/home.html'
@@ -36,7 +43,12 @@ class PostListView(ListView):
         queryset = Post.objects.filter(is_sold=False).select_related('author__profile').prefetch_related('images')
 
         if query:
+            posts = list(queryset)
+            titles = [p.title for p in posts]
+            matches = process.extract(query, titles, limit=20, score_cutoff=60)
+            matched_titles = [m[0] for m in matches]
             queryset = queryset.filter(
+                Q(title__in=matched_titles) |
                 Q(title__icontains=query) |
                 Q(content__icontains=query)
             ).distinct()
@@ -51,10 +63,7 @@ class PostListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        
-        # This is the filtered set of posts based on user search/selection
         filtered_posts = self.get_queryset()
-
         categories = OrderedDict([
             ('accessories', 'Accessories'),
             ('accounts', 'Accounts'),
@@ -64,18 +73,15 @@ class PostListView(ListView):
             ('home', 'Home'),
             ('misc', 'Miscellaneous'),
         ])
-
         categorized_posts = OrderedDict()
-
-        # Grouping the filtered results into sections
         for key, label in categories.items():
             cat_list = filtered_posts.filter(category=key)
             if cat_list.exists():
                 categorized_posts[label] = cat_list
-
         context['categorized_posts'] = categorized_posts
         context['query'] = self.request.GET.get('q', '')
         return context
+
 class UserPostListView(ListView):
     model = Post
     template_name = 'blog/user_posts.html'

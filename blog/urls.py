@@ -22,5 +22,4 @@ urlpatterns = [
     path('inbox/', views.inbox, name='inbox'),
     path('my-purchases/', views.my_purchases, name='my-purchases'),
     path('post/<int:pk>/comment/', views.add_comment, name='add-comment'),
-    
 ]

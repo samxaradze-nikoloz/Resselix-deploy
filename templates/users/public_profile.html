@@ -2,101 +2,189 @@
 {% load static %}
 {% block content %}
 
-<div class="site-container">
+<link rel="stylesheet" href="{% static 'users/main.css' %}">
 
-  <!-- ================= PROFILE HEADER ================= -->
-  <div class="card-modern" style="padding:20px;">
+<div class="site-container mt-4">
 
-    <div style="display:flex; gap:15px; align-items:center;">
+    <div class="profile-header card-modern p-4">
 
-      {% if profile_user.profile.image %}
-        <img src="{{ profile_user.profile.image.url }}"
-             style="width:80px;height:80px;border-radius:50%;object-fit:cover;">
-      {% else %}
-        <img src="{% static 'users/default.jpg' %}"
-             style="width:80px;height:80px;border-radius:50%;object-fit:cover;">
-      {% endif %}
+        <div class="profile-header-grid">
 
-      <div>
-        <h2>{{ profile_user.username }}</h2>
-        <p>{{ profile_user.email }}</p>
-        <p style="color:gray;">
-          Member since {{ profile_user.date_joined|date:"F Y" }}
-        </p>
-      </div>
+            <div>
+                {% if profile_user.profile.image %}
+                    <img src="{{ profile_user.profile.image.url }}" class="profile-avatar">
+                {% else %}
+                    <img src="{% static 'users/default.jpg' %}" class="profile-avatar">
+                {% endif %}
+            </div>
 
+            <div>
+                <h2 class="fw-bold">{{ profile_user.username }}</h2>
+
+                <div class="rating-core mt-2">
+
+                    <div class="stars-display">
+                        {% for i in "12345" %}
+                            {% if profile_user.profile.average_rating|default:0 >= forloop.counter %}
+                                <i class="bi bi-star-fill text-warning"></i>
+                            {% else %}
+                                <i class="bi bi-star text-muted"></i>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+
+                    <small class="text-muted">
+                        {{ profile_user.profile.average_rating|default:0|floatformat:1 }} / 5
+                    </small>
+
+                </div>
+
+                <div class="mt-3">
+                    <div class="trust-bar">
+                        <div class="trust-fill"
+                             style="width: {{ profile_user.profile.trust_score|default:0 }}%;">
+                        </div>
+                    </div>
+                    <small class="text-muted">Trust Score</small>
+                </div>
+
+            </div>
+
+            <div class="profile-actions">
+
+                {% if profile_user.profile.phone_number %}
+                    <button class="btn btn-dark btn-sm"
+                            onclick="this.innerHTML='📞 {{ profile_user.profile.phone_number }}'">
+                        Show Phone
+                    </button>
+                {% endif %}
+
+                <a href="mailto:{{ profile_user.email }}"
+                   class="btn btn-outline-dark btn-sm mt-2">
+                    Email Seller
+                </a>
+
+                {% if user.is_authenticated and user != profile_user %}
+                    <a href="{% url 'report-user' profile_user.username %}"
+                       class="btn btn-danger btn-sm mt-2">
+                        🚨 Report User
+                    </a>
+                {% endif %}
+
+            </div>
+
+        </div>
     </div>
 
+    <div class="row mt-4">
 
-    <div style="margin-top:15px; display:flex; gap:10px; flex-wrap:wrap;">
+        <div class="col-md-4">
 
-      {% if profile_user.profile.phone_number %}
-      <button class="btn-modern-save"
-              onclick="this.outerHTML='<span>📞 {{ profile_user.profile.phone_number }}</span>'">
-        Show Phone
-      </button>
-      {% endif %}
+            <div class="card-modern p-4">
 
-      <a class="btn-modern-save"
-         href="mailto:{{ profile_user.email }}">
-        📧 Email
-      </a>
+                <h5 class="fw-bold mb-3">Rate Seller</h5>
 
-      {% if user.is_authenticated %}
-      <a class="btn-modern-save"
-         href="{% url 'chat-view' 0 profile_user.id %}">
-        💬 Message
-      </a>
-      {% else %}
-      <a class="btn-modern-save" href="{% url 'login' %}">
-        Login to Message
-      </a>
-      {% endif %}
+                {% if user.is_authenticated and user != profile_user %}
+                <form method="POST">
+                    {% csrf_token %}
 
-    </div>
+                    <div class="star-input">
+                        {% for i in "54321" %}
+                            <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}" required>
+                            <label for="star{{ i }}">
+                                <i class="bi bi-star-fill"></i>
+                            </label>
+                        {% endfor %}
+                    </div>
 
-  </div>
+                    <textarea name="content"
+                              class="form-control mt-3"
+                              rows="3"
+                              placeholder="Write your review..."
+                              required></textarea>
 
-  <h3 style="margin-top:30px;">Listings</h3>
+                    <button class="btn btn-warning w-100 mt-3 fw-bold">
+                        Submit Review
+                    </button>
 
-  <div class="grid">
+                </form>
+                {% else %}
+                    <p class="text-muted small">Login to rate this seller.</p>
+                {% endif %}
 
-    {% for post in user_posts %}
-
-      <a href="{% url 'post-detail' post.id %}"
-         class="card-modern"
-         style="text-decoration:none; color:inherit;">
-
-        <!-- IMAGE FIX (IMPORTANT) -->
-        <div class="image-box">
-
-          {% with first_img=post.images.first %}
-            {% if first_img %}
-              <img src="{{ first_img.image.url }}" alt="">
-            {% else %}
-              <div class="no-img">No Image</div>
-            {% endif %}
-          {% endwith %}
+            </div>
 
         </div>
 
-        <div class="content">
+        <div class="col-md-8">
 
-          <h4>{{ post.title }}</h4>
+            <h4 class="fw-bold mb-3">Active Listings</h4>
 
-          <p style="color:var(--accent); font-weight:700;">
-            ${{ post.price }}
-          </p>
+            <div class="row g-3">
+
+                {% for post in user_posts %}
+                <div class="col-md-6">
+
+                    <a href="{% url 'post-detail' post.id %}" class="card-modern d-block">
+
+                        <div class="listing-img">
+                            {% if post.images.first %}
+                                <img src="{{ post.images.first.image.url }}">
+                            {% else %}
+                                <div class="no-img">No Image</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="p-3">
+                            <div class="fw-bold">{{ post.title }}</div>
+                            <div class="text-primary fw-bold">${{ post.price }}</div>
+                        </div>
+
+                    </a>
+
+                </div>
+                {% empty %}
+                    <div class="empty-box">No active listings</div>
+                {% endfor %}
+
+            </div>
+
+            <h4 class="fw-bold mt-5 mb-3">Reviews</h4>
+
+            {% for review in reviews %}
+            <div class="review-card-modern mb-3">
+
+                <div class="review-top">
+
+                    <img src="{{ review.author.profile.image.url|default:'/static/users/default.jpg' }}"
+                         class="review-avatar">
+
+                    <div>
+                        <div class="fw-bold">{{ review.author.username }}</div>
+                        <small class="text-muted">{{ review.date_posted|date:"M d, Y" }}</small>
+                    </div>
+
+                    <div>
+                        {% for i in "12345" %}
+                            {% if review.rating >= forloop.counter %}
+                                <i class="bi bi-star-fill text-warning"></i>
+                            {% else %}
+                                <i class="bi bi-star text-muted"></i>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+
+                </div>
+
+                <p class="review-text">{{ review.content }}</p>
+
+            </div>
+            {% empty %}
+                <div class="empty-box">No reviews yet</div>
+            {% endfor %}
 
         </div>
-
-      </a>
-
-    {% empty %}
-      <p style="color:gray;">No listings yet.</p>
-    {% endfor %}
-
-  </div>
+    </div>
 
 </div>
 

@@ -8,6 +8,7 @@
 
   <div class="post-layout">
 
+    <!-- LEFT -->
     <div class="post-left">
 
       <div class="post-image-box">
@@ -24,6 +25,7 @@
         {% if object.image %}
           <img src="{{ object.image.url }}" onclick="setMainImage('{{ object.image.url }}', 0)">
         {% endif %}
+
         {% for img in images %}
           {% if img.image %}
             <img src="{{ img.image.url }}"
@@ -39,6 +41,7 @@
 
     </div>
 
+    <!-- RIGHT -->
     <div class="post-right card-modern" style="padding:20px;">
 
       <h2 style="font-weight:800;">{{ object.title }}</h2>
@@ -54,40 +57,56 @@
 
       <hr>
 
+      <!-- SELLER CARD -->
       <div class="seller-mini-card">
-        <a href="{% url 'user-profile' object.author.username %}" class="seller-mini">
+
+        <!-- FIXED URL NAME -->
+        <a href="{% url 'public-profile' object.author.username %}" class="seller-mini">
+
           {% if object.author.profile.image %}
             <img src="{{ object.author.profile.image.url }}" class="seller-mini-avatar">
           {% else %}
             <img src="{% static 'users/default.jpg' %}" class="seller-mini-avatar">
           {% endif %}
+
           <div class="seller-mini-info">
             <strong>{{ object.author.username }}</strong>
             <span>View profile</span>
           </div>
+
         </a>
 
         <div class="seller-actions" style="margin-top:12px;">
+
           {% if object.author != user %}
+
             {% if user.is_authenticated %}
-              {% if object.id and object.author.id %}
+
               <a href="{% url 'chat-view' object.id object.author.id %}" class="btn-modern-save">
                 💬 Message Seller
               </a>
-              {% endif %}
-              <a href="mailto:{{ object.author.email }}" class="btn-modern-logout">📧 Email</a>
+
+              <a href="mailto:{{ object.author.email }}" class="btn-modern-logout">
+                📧 Email
+              </a>
+
               {% if object.author.profile.phone_number %}
                 <button class="btn-modern-logout"
                         onclick="revealNumber(this,'{{ object.author.profile.phone_number }}')">
                   📞 Phone
                 </button>
               {% endif %}
+
             {% else %}
-              <a href="{% url 'login' %}" class="btn-modern-save">Login to Contact</a>
+              <a href="{% url 'login' %}" class="btn-modern-save">
+                Login to Contact
+              </a>
             {% endif %}
+
           {% else %}
             <span style="color:var(--muted);">This is your listing</span>
           {% endif %}
+
         </div>
       </div>
 
@@ -96,6 +115,7 @@
       {% endif %}
 
       <button class="btn-modern-save" onclick="toggleMap()">📍 Show Map</button>
+
       <div id="mapBox" style="display:none; margin-top:10px;">
         <div id="map" style="height:300px;border-radius:10px;"></div>
       </div>
@@ -105,6 +125,7 @@
   </div>
 </div>
 
+<!-- IMAGE MODAL -->
 <div id="imageModal" class="image-modal">
   <span class="close-modal" onclick="closeModal()">&times;</span>
   <button class="nav-btn left" onclick="prevImage()">❮</button>
@@ -113,13 +134,14 @@
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <script>
 let images = [
   {% if object.image %}"{{ object.image.url }}",{% endif %}
   {% for img in images %}
     {% if img.image %}"{{ img.image.url }}",{% endif %}
   {% endfor %}
-];
+].filter(Boolean); // FIX: removes empty values
 
 let currentIndex = 0;
 
@@ -167,6 +189,7 @@ function revealNumber(btn, num){
 function updatePrice(){
   let usd = parseFloat("{{ object.price|default:0 }}");
   let gel = (usd * 2.7).toFixed(2);
+
   if(usd > 0){
     document.getElementById("priceGel").innerText = " / " + gel + " GEL";
   }

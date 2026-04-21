@@ -10,9 +10,10 @@ from django.db.models import Q
 
 from .forms import PostForm
 from .models import Post, PostImage, CartItem
-from users.models import Message, Comment
+from users.models import Message
+from .models import Comment
 
-
+from rapidfuzz import process, fuzz
 
 
 from django.db.models import Q
@@ -30,6 +31,9 @@ from django.views.generic import ListView
 from collections import OrderedDict
 from .models import Post
 
+from .models import Comment
+from django import forms
+
 class PostListView(ListView):
     model = Post
     template_name = 'blog/home.html'
@@ -40,30 +44,60 @@ class PostListView(ListView):
         category = self.request.GET.get('category')
         subcategory = self.request.GET.get('subcategory')
 
-        queryset = Post.objects.filter(is_sold=False).select_related('author__profile').prefetch_related('images')
+        queryset = Post.objects.filter(is_sold=False).select_related(
+            'author__profile'
+        ).prefetch_related('images')
 
         if query:
-            posts = list(queryset)
-            titles = [p.title for p in posts]
-            matches = process.extract(query, titles, limit=20, score_cutoff=60)
-            matched_titles = [m[0] for m in matches]
-            queryset = queryset.filter(
-                Q(title__in=matched_titles) |
-                Q(title__icontains=query) |
-                Q(content__icontains=query)
-            ).distinct()
+            scored_posts = []
+
+            for post in queryset:
+                score = max(
+                    fuzz.partial_ratio(query.lower(), post.title.lower()),
+                    fuzz.partial_ratio(query.lower(), post.content.lower())
+                )
+                if score > 40:
+                    scored_posts.append((score, post))
+
+            scored_posts.sort(reverse=True, key=lambda x: x[0])
+            queryset = [p for _, p in scored_posts]
 
         if category:
-            queryset = queryset.filter(category=category)
+            queryset = [p for p in queryset if p.category == category]
 
         if subcategory:
-            queryset = queryset.filter(subcategory=subcategory)
+            queryset = [p for p in queryset if p.subcategory == subcategory]
 
-        return queryset.order_by('-date_posted')
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        filtered_posts = self.get_queryset()
+
+        query = self.request.GET.get('q', '')
+
+        users = []
+
+        if query:
+            all_users = User.objects.select_related('profile').all()
+
+            usernames = [u.username for u in all_users]
+
+            matches = process.extract(
+                query,
+                usernames,
+                limit=10,
+                score_cutoff=60
+            )
+
+            matched_names = [m[0] for m in matches]
+
+            users = [
+                u for u in all_users
+                if u.username in matched_names
+            ]
+
+        filtered_posts = context['posts']
+
         categories = OrderedDict([
             ('accessories', 'Accessories'),
             ('accounts', 'Accounts'),
@@ -73,15 +107,21 @@ class PostListView(ListView):
             ('home', 'Home'),
             ('misc', 'Miscellaneous'),
         ])
-        categorized_posts = OrderedDict()
-        for key, label in categories.items():
-            cat_list = filtered_posts.filter(category=key)
-            if cat_list.exists():
-                categorized_posts[label] = cat_list
-        context['categorized_posts'] = categorized_posts
-        context['query'] = self.request.GET.get('q', '')
-        return context
 
+        categorized_posts = OrderedDict()
+
+        for key, label in categories.items():
+            cat_list = [
+                p for p in filtered_posts if p.category == key
+            ]
+            if cat_list:
+                categorized_posts[label] = cat_list
+
+        context['users'] = users
+        context['categorized_posts'] = categorized_posts
+        context['query'] = query
+
+        return context
 class UserPostListView(ListView):
     model = Post
     template_name = 'blog/user_posts.html'
@@ -102,16 +142,34 @@ class PostDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         post = self.get_object()
+        context['comments'] = Comment.objects.filter(post=post).order_by('-date_posted')
 
         context['comments'] = Comment.objects.filter(
             post=post
         ).order_by('-date_posted')
-
+        context['comment_form'] = CommentForm()
         context['images'] = PostImage.objects.filter(post=post)
 
 
 
         return context
+    def post(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('login')
+        
+        self.object = self.get_object()
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.post = self.object
+            comment.author = request.user
+            comment.save()
+            return redirect('post-detail', pk=self.object.pk)
+        
+        # If invalid, return the normal get context with the failed form
+        context = self.get_context_data()
+        context['comment_form'] = form
+        return self.render_to_response(context)
     
 
 class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
@@ -257,3 +315,17 @@ def my_purchases(request):
 
 def about(request):
     return render(request, 'blog/about.html', {'title': 'About'})
+
+
+
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['content']
+        widgets = {
+            # Changed 'format' to 'forms'
+            'content': forms.TextInput(attrs={
+                'placeholder': 'Add a comment...', 
+                'class': 'form-control'
+            }),
+        }

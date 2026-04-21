@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
-from .models import Profile
+from .models import Profile, Review
 
 class UserRegisterForm(UserCreationForm):
     email = forms.EmailField()
@@ -36,4 +36,13 @@ class ProfileUpdateForm(forms.ModelForm):
 
             'latitude': forms.TextInput(attrs={'readonly': 'readonly'}),
             'longitude': forms.TextInput(attrs={'readonly': 'readonly'}),
+        }
+
+class ReviewForm(forms.ModelForm):
+    class Meta:
+        model = Review
+        fields = ['rating', 'content']
+        widgets = {
+            'rating': forms.RadioSelect(choices=[(i, i) for i in range(1, 6)]),
+            'content': forms.Textarea(attrs={'rows': 3, 'class': 'form-control', 'placeholder': 'Describe your experience...'}),
         }

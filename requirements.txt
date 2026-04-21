@@ -19,3 +19,8 @@ tzdata==2025.3
 urllib3==2.6.3
 psycopg2-binary
 rapidfuzz==3.9.0
+django-allauth
+PyJWT
+cryptography
+requests
+requests-oauthlib

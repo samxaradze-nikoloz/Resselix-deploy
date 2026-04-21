@@ -2,43 +2,42 @@
 {% load crispy_forms_tags %}
 {% load socialaccount %}
 {% load static %}
-<head>
-    <link rel="stylesheet" href="{% static 'users/main.css' %}">
-</head>
+
 {% block content %}
 
-<div class="container">
-    <div class="auth-wrapper">
-        <div class="auth-card">
+<link rel="stylesheet" href="{% static 'users/main.css' %}">
 
-            <div class="auth-title">Create Your Account</div>
+<div class="auth-container">
+    <div class="auth-card">
 
-            <form method="POST">
-                {% csrf_token %}
-                {{ form|crispy }}
+        <h2 class="auth-title">Create Your Account</h2>
+        <p class="auth-subtitle">Join Resselix and start selling or buying anything</p>
 
-                <button type="submit" class="btn-modern-save mt-3">
-                    Sign Up
-                </button>
-            </form>
+        <form method="POST">
+            {% csrf_token %}
+            {{ form|crispy }}
 
-            <div class="auth-divider">
-                <hr>
-                <span>OR</span>
-                <hr>
-            </div>
+            <button type="submit" class="btn-main mt-3">
+                Sign Up
+            </button>
+        </form>
 
-            <a href="{% provider_login_url 'google' %}" class="btn-google">
-                <img src="{% static 'images/google.png' %}" alt="Google">
-                <span>Sign in with Google</span>
-            </a>
-
-            <div class="auth-footer">
-                Already have an account?
-                <a href="{% url 'login' %}">Sign In</a>
-            </div>
-
+        <div class="auth-divider">
+            <hr>
+            <span>OR</span>
+            <hr>
         </div>
+
+        <a href="{% provider_login_url 'google' %}" class="google-btn">
+            <img src="{% static 'images/google.png' %}" alt="Google">
+            <span>Sign in with Google</span>
+        </a>
+
+        <div class="auth-footer">
+            Already have an account?
+            <a href="{% url 'login' %}">Sign In</a>
+        </div>
+
     </div>
 </div>
 

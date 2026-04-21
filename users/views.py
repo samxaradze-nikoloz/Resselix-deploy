@@ -1,3 +1,4 @@
+from charset_normalizer import models
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -6,7 +7,8 @@ from django.contrib.auth import logout
 from django.utils import timezone
 
 from rest_framework import generics, permissions
-
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
 from blog.models import Post
 from .models import Profile, Review
 from .forms import UserRegisterForm, UserUpdateForm, ProfileUpdateForm
@@ -50,7 +52,7 @@ def profile(request):
         logout(request)
         messages.error(request, "Your account is suspended.")
         return redirect("login")
-
+   
     if request.method == "POST":
         u_form = UserUpdateForm(request.POST, instance=request.user)
         p_form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.profile)
@@ -149,27 +151,48 @@ from datetime import timedelta
 
 @staff_member_required
 def ban_user(request, username):
-    user = get_object_or_404(User, username=username)
-    duration = request.POST.get("duration")
+    if request.method == "POST":
+        user = get_object_or_404(User, username=username)
+        duration = request.POST.get("duration")
+        profile = user.profile
 
-    profile = user.profile
-    profile.is_banned = True
+        if duration == "unban":
+            profile.is_banned = False
+            profile.ban_until = None
+        else:
+            profile.is_banned = True
+            if duration == "1h":
+                profile.ban_until = timezone.now() + timedelta(hours=1)
+            elif duration == "24h":
+                profile.ban_until = timezone.now() + timedelta(days=1)
+            elif duration == "7d":
+                profile.ban_until = timezone.now() + timedelta(days=7)
+            elif duration == "30d":
+                profile.ban_until = timezone.now() + timedelta(days=30)
+            elif duration == "perm":
+                profile.ban_until = None
 
-    if duration == "1h":
-        profile.ban_until = timezone.now() + timedelta(hours=1)
-
-    elif duration == "24h":
-        profile.ban_until = timezone.now() + timedelta(days=1)
-
-    elif duration == "7d":
-        profile.ban_until = timezone.now() + timedelta(days=7)
-
-    elif duration == "30d":
-        profile.ban_until = timezone.now() + timedelta(days=30)
-
-    elif duration == "perm":
-        profile.ban_until = None  # permanent ban
-
-    profile.save()
-
+        profile.save()
+        messages.warning(request, f"Moderation updated for {username}")
+    
     return redirect("public-profile", username=username)
+
+
+@staff_member_required
+def admin_delete_post(request, pk):
+    post = get_object_or_404(Post, pk=pk)
+    username = post.author.username
+    post.delete()
+    messages.success(request, f"Post #{pk} has been deleted by an administrator.")
+    return redirect('public-profile', username=username)
+
+
+@login_required
+def update_theme(request):
+    theme = request.GET.get('theme')
+    if theme in ['light', 'dark']:
+        profile = request.user.profile
+        profile.theme = theme
+        profile.save()
+        return JsonResponse({'status': 'ok'})
+    return JsonResponse({'status': 'error'}, status=400)

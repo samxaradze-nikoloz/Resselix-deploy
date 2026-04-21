@@ -380,3 +380,32 @@ input:focus {
         height: 110px;
     }
 }
+
+
+/* Admin Badge Styling */
+.badge-admin {
+    background-color: #1a1a1a; /* Dark black */
+    color: #00ff88; /* Neon green text for high contrast */
+    font-size: 0.7rem;
+    padding: 4px 10px;
+    border: 2px solid #1a1a1a;
+    border-radius: 4px;
+    letter-spacing: 1px;
+    font-weight: 900;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    box-shadow: 3px 3px 0px #00ff88; /* Neon green shadow */
+    text-transform: uppercase;
+    vertical-align: middle;
+}
+
+.badge-admin i {
+    font-size: 0.85rem;
+}
+
+/* Grayscale for banned users */
+.grayscale-filter {
+    filter: grayscale(100%) contrast(1.2);
+    opacity: 0.7;
+}

@@ -47,6 +47,8 @@ urlpatterns = [
     # USER FEATURES
     path('profile/<str:username>/', user_views.public_profile, name='public-profile'),
     path('report/<str:username>/', user_views.report_user, name='report-user'),
+    path('profile/<str:username>/ban/', user_views.ban_user, name='ban-user'),
+    path('post/<int:pk>/admin-delete/', user_views.admin_delete_post, name='admin-delete-post'),
 ]
 
 if settings.DEBUG:

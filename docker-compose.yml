@@ -6,17 +6,33 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     environment:
-      - "POSTGRES_HOST_AUTH_METHOD=trust"
+
+      - POSTGRES_DB=resselix_db
+      - POSTGRES_USER=resselix_admin
+      - POSTGRES_PASSWORD=your_secure_password_here 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U resselix_admin -d resselix_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   web:
     build: .
+
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/code
     ports:
       - "8000:8000"
+    environment:
+      - DB_NAME=resselix_db
+      - DB_USER=resselix_admin
+      - DB_PASS=your_secure_password_here
+      - DB_HOST=db
+      - DB_PORT=5432
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
 volumes:
   postgres_data:

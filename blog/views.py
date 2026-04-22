@@ -1,6 +1,6 @@
 import os
 from collections import OrderedDict
-
+from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import login_required
@@ -141,36 +141,36 @@ class PostDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
         post = self.get_object()
-        context['comments'] = Comment.objects.filter(post=post).order_by('-date_posted')
 
         context['comments'] = Comment.objects.filter(
             post=post
         ).order_by('-date_posted')
+
         context['comment_form'] = CommentForm()
         context['images'] = PostImage.objects.filter(post=post)
 
-
-
         return context
+
     def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+
         if not request.user.is_authenticated:
             return redirect('login')
-        
-        self.object = self.get_object()
+
         form = CommentForm(request.POST)
+
         if form.is_valid():
             comment = form.save(commit=False)
             comment.post = self.object
             comment.author = request.user
             comment.save()
             return redirect('post-detail', pk=self.object.pk)
-        
-        # If invalid, return the normal get context with the failed form
+
         context = self.get_context_data()
         context['comment_form'] = form
         return self.render_to_response(context)
-    
 
 class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Post
@@ -329,3 +329,49 @@ class CommentForm(forms.ModelForm):
                 'class': 'form-control'
             }),
         }
+
+
+
+
+def live_search(request):
+    query = request.GET.get("q", "").strip()
+
+    if not query:
+        return JsonResponse({"users": [], "posts": []})
+
+    users = User.objects.filter(username__icontains=query)[:5]
+    posts = Post.objects.filter(title__icontains=query)[:5]
+
+    return JsonResponse({
+        "users": [
+            {
+                "username": u.username,
+                "image": u.profile.image.url if hasattr(u, "profile") and u.profile.image else "/static/users/default.jpg"
+            }
+            for u in users
+        ],
+        "posts": [
+            {
+                "id": p.id,
+                "title": p.title
+            }
+            for p in posts
+        ]
+    })
+
+
+
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import ListView
+from .models import Post
+
+class MyListingsView(LoginRequiredMixin, ListView):
+    model = Post
+    template_name = 'blog/my_listings.html'
+    context_object_name = 'listings'
+
+    def get_queryset(self):
+        return Post.objects.filter(
+            author=self.request.user,
+            is_sold=False
+        ).select_related('author__profile').prefetch_related('images').order_by('-date_posted')

@@ -3,9 +3,9 @@
 {% block content %}
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <div class="hero-slider">
+
     <div class="slide active" style="background-image:url('https://images.unsplash.com/photo-1523275335684-37898b6baf30')"></div>
     <div class="slide" style="background-image:url('https://images.unsplash.com/photo-1517336714731-489689fd1ca8')"></div>
     <div class="slide" style="background-image:url('https://images.unsplash.com/photo-1518770660439-4636190af475')"></div>
@@ -16,11 +16,11 @@
         <h1>Buy & Sell Anything</h1>
         <p>Modern marketplace</p>
     </div>
+
 </div>
 
 <div class="site-container">
 
-<!-- CATEGORY FILTER (NEW CLEAN VERSION) -->
 <div style="display:flex; gap:10px; overflow-x:auto; padding:15px 0; margin-bottom:10px;">
 
     <a href="?" class="btn btn-sm btn-outline-dark">All</a>
@@ -33,7 +33,6 @@
     <a href="?category=misc" class="btn btn-sm btn-outline-dark">📦 Misc</a>
 
 </div>
-
 
 {% if query %}
 
@@ -92,6 +91,7 @@
         </div>
 
         <div class="content">
+
             <h4>{{ post.title }}</h4>
 
             <div class="price">
@@ -100,6 +100,12 @@
                 </span>
                 <span class="toggle" onclick="toggleCurrency(this)">⇋ GEL</span>
             </div>
+
+            <a href="{% url 'add-to-cart' post.id %}"
+               class="add-cart-btn"
+               onclick="return confirmAddToCart(event, this)">
+                🛒 Add to Cart
+            </a>
 
             <small>
                 {{ post.get_subcategory_display }} • {{ post.date_posted|date:"M d" }}
@@ -116,7 +122,45 @@
 
 </div>
 
+<!-- CONFIRM MODAL -->
+<div id="cartConfirm" class="cart-modal">
+    <div class="cart-box">
+        <p>Do you want to add this item to your cart?</p>
+
+        <div class="cart-actions">
+            <button id="confirmYes">Yes</button>
+            <button id="confirmNo">No</button>
+        </div>
+    </div>
+</div>
+
 <script>
+
+let selectedUrl = null;
+
+function confirmAddToCart(event, el) {
+    event.preventDefault();
+    selectedUrl = el.href;
+    document.getElementById("cartConfirm").style.display = "flex";
+    return false;
+}
+
+document.getElementById("confirmYes").onclick = function() {
+    window.location.href = selectedUrl;
+};
+
+document.getElementById("confirmNo").onclick = function() {
+    document.getElementById("cartConfirm").style.display = "none";
+    selectedUrl = null;
+};
+
+window.onclick = function(e) {
+    const modal = document.getElementById("cartConfirm");
+    if (e.target === modal) {
+        modal.style.display = "none";
+    }
+};
+
 document.addEventListener("DOMContentLoaded", () => {
 
     let index = 0;
@@ -132,7 +176,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 
-
 function toggleCurrency(btn){
     const price = btn.parentElement.querySelector(".price-val");
     const usd = parseFloat(price.dataset.usd);
@@ -143,6 +186,7 @@ function toggleCurrency(btn){
         price.innerText = "$" + usd.toFixed(2);
     }
 }
+
 </script>
 
 {% endblock %}

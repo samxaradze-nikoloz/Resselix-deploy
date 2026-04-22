@@ -52,7 +52,13 @@ def profile(request):
         logout(request)
         messages.error(request, "Your account is suspended.")
         return redirect("login")
-   
+
+    # ACTIVE LISTINGS
+    listings = Post.objects.filter(
+        author=request.user,
+        is_sold=False
+    ).prefetch_related('images').order_by('-date_posted')
+
     if request.method == "POST":
         u_form = UserUpdateForm(request.POST, instance=request.user)
         p_form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.profile)
@@ -62,16 +68,15 @@ def profile(request):
             p_form.save()
             messages.success(request, "Profile updated successfully")
             return redirect("profile")
-
     else:
         u_form = UserUpdateForm(instance=request.user)
         p_form = ProfileUpdateForm(instance=request.user.profile)
 
     return render(request, "users/profile.html", {
         "u_form": u_form,
-        "p_form": p_form
+        "p_form": p_form,
+        "listings": listings
     })
-
 
 def public_profile(request, username):
     profile_user = get_object_or_404(User, username=username)

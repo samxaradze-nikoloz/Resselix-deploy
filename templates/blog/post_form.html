@@ -4,59 +4,137 @@
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
+<style>
+.site-container { padding:20px; }
+.card-modern { background:#fff; border-radius:14px; box-shadow:0 10px 25px rgba(0,0,0,0.08); max-width:850px; margin:auto; padding:25px; }
+
+label { font-weight:600; display:block; margin-bottom:6px; }
+
+input, select, textarea {
+  width:100%;
+  padding:10px;
+  border-radius:10px;
+  border:1px solid #ddd;
+  outline:none;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color:#111;
+}
+
+.row-flex { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:10px; }
+
+.btn {
+  padding:10px 12px;
+  border-radius:10px;
+  border:none;
+  cursor:pointer;
+  font-weight:600;
+}
+
+.btn-dark { background:#111; color:#fff; }
+.btn-light { background:#eee; }
+
+.map-box {
+  height:320px;
+  border-radius:12px;
+  overflow:hidden;
+  margin-top:10px;
+  display:none;
+}
+
+.preview-main {
+  width:140px;
+  height:140px;
+  object-fit:cover;
+  border-radius:12px;
+  border:2px solid #ddd;
+  margin-top:10px;
+}
+
+.preview-img {
+  width:90px;
+  height:90px;
+  object-fit:cover;
+  border-radius:10px;
+  border:2px solid #eee;
+}
+
+.preview-grid { display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; }
+
+</style>
+
 <div class="site-container">
-  <div class="card-modern" style="padding:20px; max-width:750px; margin:auto;">
-    <h2 style="font-weight:800; margin-bottom:15px;">Create New Listing</h2>
+  <div class="card-modern">
+
+    <h2 style="font-weight:800; margin-bottom:20px;">Create New Listing</h2>
 
     <form method="POST" enctype="multipart/form-data">
       {% csrf_token %}
 
-      {% if form.errors %}
-        <div class="alert alert-danger">
-            {{ form.errors }}
-        </div>
-      {% endif %}
+      <div style="margin-bottom:12px;">
+        <label>Title</label>
+        {{ form.title }}
+      </div>
 
-      <label>Title</label>
-      {{ form.title }}<br>
+      <div style="margin-bottom:12px;">
+        <label>Price</label>
+        {{ form.price }}
+      </div>
 
-      <label>Price</label>
-      {{ form.price }}<br>
+      <div style="margin-bottom:12px;">
+        <label>Description</label>
+        {{ form.content }}
+      </div>
 
-      <label>Description</label>
-      {{ form.content }}<br>
+      <div style="margin-bottom:12px;">
+        <label>Category</label>
+        <select name="category" id="id_category" required>
+          <option value="">Select category</option>
+          {% for value, label in form.fields.category.choices %}
+            {% if value %}<option value="{{ value }}">{{ label }}</option>{% endif %}
+          {% endfor %}
+        </select>
+      </div>
 
-      <label>Category</label>
-      <select name="category" id="id_category" class="form-control" required>
-        <option value="">Select category</option>
-        {% for value, label in form.fields.category.choices %}
-            {% if value %} <option value="{{ value }}">{{ label }}</option> {% endif %}
-        {% endfor %}
-      </select><br>
+      <div style="margin-bottom:12px;">
+        <label>Subcategory</label>
+        <select name="subcategory" id="id_subcategory" required>
+          <option value="">Select subcategory</option>
+        </select>
+      </div>
 
-      <label>Subcategory</label>
-      <select name="subcategory" id="id_subcategory" class="form-control" required>
-        <option value="">Select subcategory</option>
-      </select><br>
+      <div style="margin-bottom:12px;">
+        <label>Main Image</label>
+        <input type="file" id="mainImage" name="main_image" accept="image/*" required>
+        <div id="mainPreview"></div>
+      </div>
 
-      <label>Main Image</label>
-      <input type="file" name="main_image" class="form-control" required><br>
+      <div style="margin-bottom:12px;">
+        <label>Extra Images</label>
+        <input type="file" id="extraImages" name="images" multiple accept="image/*">
+        <div class="preview-grid" id="extraPreview"></div>
+      </div>
 
-      <label>Extra Images (Hold Ctrl to select multiple)</label>
-      <input type="file" name="images" class="form-control" multiple><br>
+      <div style="margin-bottom:12px;">
+        <label>Address</label>
+        {{ form.address }}
+      </div>
 
-      <label>Address</label>
-      {{ form.address }}<br>
+      <div class="row-flex">
+        <button type="button" class="btn btn-dark" id="useMyLocation">📍 Use My Location</button>
+        <button type="button" class="btn btn-light" id="customLocationBtn">🗺️ Open Map</button>
+      </div>
 
-      <label>Pick Location</label>
-      <div id="map" style="height:300px; border-radius:10px; margin-bottom: 10px;"></div>
+      <div id="map" class="map-box"></div>
 
       {{ form.latitude }}
       {{ form.longitude }}
 
-      <button type="submit" class="btn-modern-save">
+      <button type="submit" class="btn btn-dark" style="width:100%; margin-top:15px;">
         🚀 Post Listing
       </button>
+
     </form>
   </div>
 </div>
@@ -64,70 +142,149 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
+let mapVisible = false;
+
 let lat = 41.7151;
 let lng = 44.8271;
 
-const map = L.map('map').setView([lat, lng], 12);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+const map = L.map('map').setView([lat, lng], 13);
 
-let marker = L.marker([lat, lng], {draggable:true}).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19
+}).addTo(map);
+
+let marker = L.marker([lat, lng], { draggable: true }).addTo(map);
 
 const latInput = document.getElementById("id_latitude");
 const lngInput = document.getElementById("id_longitude");
 const addrInput = document.getElementById("id_address");
+const mapBox = document.getElementById("map");
 
-function updateCoords(l, g){
+function showMap(){
+  if(!mapVisible){
+    mapBox.style.display = "block";
+    setTimeout(()=> map.invalidateSize(), 200);
+    mapVisible = true;
+  }
+}
+
+function setLocation(l, g){
   latInput.value = l.toFixed(6);
   lngInput.value = g.toFixed(6);
+
+  addrInput.value = "Loading address...";
 
   fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${l}&lon=${g}`)
     .then(res => res.json())
     .then(data => {
-      if(data && data.address){
-        let suburb = data.address.suburb || data.address.neighbourhood || "";
-        let road = data.address.road || "";
-        let shortAddr = [suburb, road].filter(Boolean).join(", ");
-        addrInput.value = shortAddr;
+      if(data && data.display_name){
+        addrInput.value = data.display_name;
+      } else if(data && data.address){
+        const a = data.address;
+        addrInput.value =
+          (a.road || "") + " " +
+          (a.city || a.town || a.village || "") + " " +
+          (a.country || "");
+      } else {
+        addrInput.value = `${l.toFixed(5)}, ${g.toFixed(5)}`;
       }
+    })
+    .catch(() => {
+      addrInput.value = `${l.toFixed(5)}, ${g.toFixed(5)}`;
     });
 }
 
-updateCoords(lat, lng);
-
 marker.on('dragend', function(){
   const p = marker.getLatLng();
-  updateCoords(p.lat, p.lng);
+  setLocation(p.lat, p.lng);
 });
 
 map.on('click', function(e){
   marker.setLatLng(e.latlng);
-  updateCoords(e.latlng.lat, e.latlng.lng);
+  setLocation(e.latlng.lat, e.latlng.lng);
 });
 
-setTimeout(() => map.invalidateSize(), 300);
+document.getElementById("useMyLocation").addEventListener("click", function(){
+  showMap();
 
+  if (!navigator.geolocation) {
+    alert("Geolocation not supported");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    function(pos){
+      const l = pos.coords.latitude;
+      const g = pos.coords.longitude;
+
+      map.setView([l,g], 15);
+      marker.setLatLng([l,g]);
+      setLocation(l,g);
+    },
+    function(){
+      alert("Could not get location. Click map manually.");
+    },
+    { enableHighAccuracy:true, timeout:10000 }
+  );
+});
+
+document.getElementById("customLocationBtn").addEventListener("click", function(){
+  showMap();
+});
+
+setTimeout(()=>map.invalidateSize(),300);
+
+/* MAIN IMAGE PREVIEW */
+document.getElementById("mainImage").addEventListener("change", function(){
+  const file = this.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById("mainPreview").innerHTML =
+      `<img src="${e.target.result}" class="preview-main">`;
+  };
+  reader.readAsDataURL(file);
+});
+
+/* EXTRA IMAGES PREVIEW */
+document.getElementById("extraImages").addEventListener("change", function(){
+  const box = document.getElementById("extraPreview");
+  box.innerHTML = "";
+
+  Array.from(this.files).forEach(file=>{
+    const reader = new FileReader();
+    reader.onload = e=>{
+      const img = document.createElement("img");
+      img.src = e.target.result;
+      img.className = "preview-img";
+      box.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+  });
+});
+
+/* CATEGORY */
 const subcategories = {
-  electronics: [["phones", "Phones"], ["laptops", "Laptops"], ["tech_accessories", "Tech Accessories"]],
-  fashion: [["men", "Men Fashion"], ["women", "Women Fashion"], ["shoes", "Shoes"]],
-  sports: [["winter_sports", "Winter Sports"], ["football", "Football"], ["basketball", "Basketball"], ["gym", "Gym / Fitness"]],
-  home: [["furniture", "Furniture"], ["decor", "Decorations"]],
-  accessories: [["phone_cases", "Phone Cases"], ["watches", "Watches"], ["bags", "Bags"], ["jewelry", "Jewelry"]],
-  accounts: [["steam", "Steam Account"], ["epic", "Epic Games Account"], ["riot", "Riot Games Account"], ["psn", "PlayStation Account"], ["xbox", "Xbox Account"]],
-  misc: [] 
+  electronics: [["phones","Phones"],["laptops","Laptops"],["tech_accessories","Tech Accessories"]],
+  fashion: [["men","Men Fashion"],["women","Women Fashion"],["shoes","Shoes"]],
+  sports: [["winter_sports","Winter Sports"],["football","Football"],["basketball","Basketball"],["gym","Gym"]],
+  home: [["furniture","Furniture"],["decor","Decor"]],
+  accessories: [["phone_cases","Phone Cases"],["watches","Watches"],["bags","Bags"],["jewelry","Jewelry"]],
+  accounts: [["steam","Steam"],["epic","Epic"],["riot","Riot"],["psn","PSN"],["xbox","Xbox"]],
+  misc: []
 };
 
-document.getElementById("id_category").addEventListener("change", function () {
-  const subSelect = document.getElementById("id_subcategory");
-  subSelect.innerHTML = "<option value=''>Select subcategory</option>";
-  const choices = subcategories[this.value];
-  if (choices) {
-    choices.forEach(pair => {
-      let opt = document.createElement("option");
-      opt.value = pair[0];
-      opt.textContent = pair[1];
-      subSelect.appendChild(opt);
-    });
-  }
+document.getElementById("id_category").addEventListener("change", function(){
+  const sub = document.getElementById("id_subcategory");
+  sub.innerHTML = "<option value=''>Select subcategory</option>";
+  (subcategories[this.value] || []).forEach(p=>{
+    const opt = document.createElement("option");
+    opt.value = p[0];
+    opt.textContent = p[1];
+    sub.appendChild(opt);
+  });
 });
 </script>
+
 {% endblock %}

@@ -6,141 +6,250 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"/>
 
-<div class="profile-page-container">
+<div class="dash-profile">
 
-  <div class="profile-header-grid">
-    <img class="profile-pic" src="{{ user.profile.image.url }}" alt="profile">
-    <div>
-      <h2 class="username-display">{{ user.username }}</h2>
-      <p class="muted">{{ user.email }}</p>
-    </div>
-  </div>
+  <div class="dash-header">
 
-  <div class="settings-card">
-    
-    <fieldset class="profile-fieldset mb-4">
-      <legend>Appearance</legend>
-      <div class="d-flex align-items-center justify-content-between p-2">
-        <span>Personalize your view (Dark/Light Mode)</span>
-        <button id="themeToggleProfile" class="btn btn-outline-dark fw-bold border-2 border-dark shadow-sm" type="button">
-          🌙
-        </button>
-      </div>
-    </fieldset>
+    <div class="dash-user">
 
-    <form method="POST" enctype="multipart/form-data" id="profile-form">
-      {% csrf_token %}
+      <img class="dash-avatar" src="{{ user.profile.image.url }}">
 
-      <fieldset class="profile-fieldset">
-        <legend>User Information</legend>
-        {{ u_form.username|as_crispy_field }}
-        {{ u_form.email|as_crispy_field }}
-      </fieldset>
+      <div class="dash-userinfo">
 
-      <fieldset class="profile-fieldset">
-        <legend>Profile Settings</legend>
-        {{ p_form.image|as_crispy_field }}
+        <h2>
+          {{ user.username }}
+          {% if user.is_staff or user.is_superuser %}
+            <span class="admin-badge">ADMIN</span>
+          {% endif %}
+        </h2>
 
-        <label>Phone Number</label>
-        <div class="phone-box">
-          <div class="phone-prefix">+995</div>
-          <input type="text" id="id_phone_number" name="phone_number" maxlength="11"
-                 placeholder="5XX XXX XXX" value="{{ p_form.phone_number.value|default:'' }}">
+        <div class="dash-meta">
+          <span><b>{{ listings|length }}</b> Listings</span>
         </div>
 
-        <label>Address</label>
-        <input type="text" id="id_address" name="address"
-               value="{{ p_form.address.value|default:'' }}" class="form-control">
-
-        <label>Location</label>
-        <div id="map" style="height: 300px; border-radius: 10px;"></div>
-
-        <input type="hidden" id="id_latitude" name="latitude"
-               value="{{ p_form.latitude.value|default:'' }}">
-        <input type="hidden" id="id_longitude" name="longitude"
-               value="{{ p_form.longitude.value|default:'' }}">
-      </fieldset>
-
-      <div class="profile-actions">
-        <button class="btn-modern-save" type="submit">Save Changes</button>
-        <button form="logout-form" class="btn-modern-logout" type="submit">Logout</button>
       </div>
-    </form>
+
+    </div>
+
+    <div class="dash-actions">
+
+      <button id="themeToggle" class="theme-btn">🌙</button>
+      <button id="openSettings" class="dash-btn">Account Settings</button>
+
+    </div>
+
   </div>
+
+  <div class="dash-section-title">Your Listings</div>
+
+  <div class="dash-grid">
+
+    {% for post in listings %}
+    <div class="dash-card">
+
+      <div class="dash-image">
+        {% if post.images.all %}
+          <img src="{{ post.images.first.image.url }}">
+        {% else %}
+          <img src="/static/default.jpg">
+        {% endif %}
+      </div>
+
+      <div class="dash-card-body">
+        <h4>{{ post.title }}</h4>
+        <p class="dash-price">{{ post.price }} ₾</p>
+      </div>
+
+    </div>
+    {% empty %}
+      <p class="dash-empty">No listings created yet</p>
+    {% endfor %}
+
+  </div>
+
 </div>
 
-<form id="logout-form" method="POST" action="{% url 'logout' %}" style="display:none;">
-  {% csrf_token %}
-</form>
+<div id="settingsModal" class="dash-modal">
+
+  <div class="dash-modal-box">
+
+    <div class="dash-modal-header">
+      <h3>Account Settings</h3>
+      <span id="closeSettings" class="dash-close">&times;</span>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <div class="dash-form-grid">
+        {{ u_form.username }}
+        {{ u_form.email }}
+        {{ p_form.image }}
+      </div>
+
+      <label>Phone Number</label>
+      <input type="text" name="phone_number" value="{{ p_form.phone_number.value|default:'' }}">
+
+      <label>Address</label>
+      <input type="text" id="id_address" name="address" value="{{ p_form.address.value|default:'' }}">
+
+      <label>Location</label>
+      <div id="map"></div>
+
+      <button type="button" id="geoBtn" class="dash-geo">📍 Use Current Location</button>
+
+      <input type="hidden" id="id_latitude" name="latitude" value="{{ p_form.latitude.value|default:'' }}">
+      <input type="hidden" id="id_longitude" name="longitude" value="{{ p_form.longitude.value|default:'' }}">
+
+      <button class="dash-save" type="submit">Save Changes</button>
+
+    </form>
+
+    <button type="button" class="dash-logout" onclick="openLogout()">Logout</button>
+
+  </div>
+
+</div>
+
+<div id="logoutModal" class="logout-modal">
+
+  <div class="logout-box">
+
+    <h3>Are you sure you want to logout?</h3>
+
+    <div class="logout-actions">
+
+      <form method="POST" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="logout-confirm">Yes, Logout</button>
+      </form>
+
+      <button type="button" class="logout-cancel" onclick="closeLogout()">Cancel</button>
+
+    </div>
+
+  </div>
+
+</div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
 <script>
-/** Theme Switcher Logic **/
-(function() {
-  const themeBtn = document.getElementById("themeToggleProfile");
-  
-  function updateBtn(isDark) {
-    if (themeBtn) themeBtn.textContent = isDark ? "☀️" : "🌙";
-  }
 
-  // Check state on load
-  updateBtn(document.body.classList.contains("dark"));
+let modal = document.getElementById("settingsModal");
+let logoutModal = document.getElementById("logoutModal");
+let map;
+let marker;
 
-  if (themeBtn) {
-    themeBtn.addEventListener("click", function() {
-      const isDark = document.body.classList.toggle("dark");
-      // Save choice only to this specific user's browser
-      localStorage.setItem("theme", isDark ? "dark" : "light");
-      updateBtn(isDark);
-    });
-  }
-})();
-
-/** Phone Formatting **/
-const phoneInput = document.getElementById("id_phone_number");
-function formatPhone(v){
-    let d = v.replace(/\D/g,'').slice(0,9);
-    if(d.length<=3) return d;
-    if(d.length<=6) return d.slice(0,3)+' '+d.slice(3);
-    return d.slice(0,3)+' '+d.slice(3,6)+' '+d.slice(6);
-}
-if(phoneInput){
-  phoneInput.addEventListener("input", e => e.target.value = formatPhone(e.target.value));
+function openLogout() {
+  logoutModal.style.display = "flex";
 }
 
-/** Map Logic **/
-let lat = parseFloat("{{ p_form.latitude.value|default:41.7151 }}") || 41.7151;
-let lng = parseFloat("{{ p_form.longitude.value|default:44.8271 }}") || 44.8271;
+function closeLogout() {
+  logoutModal.style.display = "none";
+}
 
-const map = L.map('map').setView([lat, lng], 13);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-let marker = L.marker([lat, lng], {draggable:true}).addTo(map);
+function initMap() {
 
-function update(lat, lng){
-    document.getElementById('id_latitude').value = lat.toFixed(6);
-    document.getElementById('id_longitude').value = lng.toFixed(6);
-    fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
-      .then(res => res.json())
+  let lat = parseFloat("{{ p_form.latitude.value|default:41.7151 }}") || 41.7151;
+  let lng = parseFloat("{{ p_form.longitude.value|default:44.8271 }}") || 44.8271;
+
+  map = L.map('map').setView([lat, lng], 13);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+  marker = L.marker([lat, lng], {draggable:true}).addTo(map);
+
+  function setLocation(lat, lng) {
+    document.getElementById("id_latitude").value = lat;
+    document.getElementById("id_longitude").value = lng;
+
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+      .then(r => r.json())
       .then(data => {
-        if(data && data.display_name) document.getElementById("id_address").value = data.display_name;
+        if (data.display_name) {
+          document.getElementById("id_address").value = data.display_name;
+        }
       });
+  }
+
+  marker.on('dragend', e => {
+    let p = e.target.getLatLng();
+    setLocation(p.lat, p.lng);
+  });
+
+  map.on('click', e => {
+    marker.setLatLng(e.latlng);
+    setLocation(e.latlng.lat, e.latlng.lng);
+  });
+
+  L.Control.geocoder({
+    defaultMarkGeocode: false,
+    geocoder: L.Control.Geocoder.nominatim({
+      geocodingQueryParams: {
+        limit: 6,
+        addressdetails: 1
+      }
+    })
+  }).on('markgeocode', function(e) {
+    let c = e.geocode.center;
+    marker.setLatLng(c);
+    map.setView(c, 15);
+    setLocation(c.lat, c.lng);
+  }).addTo(map);
+
+  document.getElementById("geoBtn").onclick = function () {
+    navigator.geolocation.getCurrentPosition(pos => {
+      let lat = pos.coords.latitude;
+      let lng = pos.coords.longitude;
+      marker.setLatLng([lat, lng]);
+      map.setView([lat, lng], 15);
+      setLocation(lat, lng);
+    });
+  };
+
 }
 
-marker.on('dragend', e => {
-    let p = e.target.getLatLng();
-    update(p.lat, p.lng);
+document.getElementById("openSettings").onclick = function () {
+  modal.style.display = "block";
+  setTimeout(() => {
+    if (!map) initMap();
+    map.invalidateSize();
+  }, 200);
+};
+
+document.getElementById("closeSettings").onclick = function () {
+  modal.style.display = "none";
+};
+
+window.onclick = function (e) {
+  if (e.target == modal) modal.style.display = "none";
+  if (e.target == logoutModal) logoutModal.style.display = "none";
+};
+
+const themeBtn = document.getElementById("themeToggle");
+
+function applyTheme(theme) {
+  if (theme === "dark") {
+    document.body.classList.add("dark");
+    themeBtn.textContent = "☀️";
+  } else {
+    document.body.classList.remove("dark");
+    themeBtn.textContent = "🌙";
+  }
+}
+
+themeBtn.onclick = function () {
+  let isDark = document.body.classList.toggle("dark");
+  localStorage.setItem("theme", isDark ? "dark" : "light");
+  applyTheme(isDark ? "dark" : "light");
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+  applyTheme(localStorage.getItem("theme") || "light");
 });
 
-L.Control.geocoder({ defaultMarkGeocode: false }).on('markgeocode', function(e) {
-    const center = e.geocode.center;
-    marker.setLatLng(center);
-    map.setView(center, 15);
-    update(center.lat, center.lng);
-}).addTo(map);
-
-setTimeout(()=>map.invalidateSize(), 300);
 </script>
 
 {% endblock %}

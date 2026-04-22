@@ -599,3 +599,57 @@ input:focus {
   cursor: pointer;
   border-radius: 8px;
 }
+
+
+.location-card {
+    margin-top: 15px;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.location-title {
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.mini-map {
+    height: 140px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.location-address {
+    font-size: 12px;
+    color: #666;
+    margin-top: 8px;
+}
+
+
+.star-rating {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: start;
+    gap: 5px;
+}
+
+.star-rating input {
+    display: none;
+}
+
+.star-rating label {
+    font-size: 22px;
+    color: #ccc;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.star-rating label:hover,
+.star-rating label:hover ~ label {
+    color: #f5b301;
+}
+
+.star-rating input:checked ~ label {
+    color: #f5b301;
+}

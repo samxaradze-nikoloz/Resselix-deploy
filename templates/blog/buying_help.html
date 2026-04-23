@@ -1,0 +1,212 @@
+{% extends "blog/base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block content %}
+
+<style>
+.help-container {
+    max-width: 1000px;
+    margin: 50px auto;
+    padding: 0 20px;
+}
+
+/* HEADER */
+.help-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.help-header h1 {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--text);
+}
+
+.help-header p {
+    color: var(--muted);
+}
+
+/* CARD */
+.help-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 30px;
+    margin-bottom: 25px;
+}
+
+/* STEPS */
+.step {
+    display: flex;
+    gap: 18px;
+    margin-top: 25px;
+}
+
+.step-number {
+    min-width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #00ffae, #00c3ff);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    color: #000;
+}
+
+.step-content h4 {
+    margin: 0;
+    color: var(--text);
+}
+
+.step-content p {
+    color: var(--muted);
+    font-size: 14px;
+}
+
+/* SAFETY GRID */
+.safety-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 18px;
+    margin-top: 20px;
+}
+
+.safety-item {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    text-align: center;
+    transition: 0.2s;
+}
+
+.safety-item:hover {
+    border-color: #00ffae;
+    box-shadow: 0 0 15px rgba(0,255,174,0.15);
+}
+
+.safety-item h5 {
+    margin-top: 10px;
+    color: var(--text);
+}
+
+.safety-item p {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+/* TIP BOX */
+.tip-box {
+    background: rgba(0,255,174,0.08);
+    border: 1px solid rgba(0,255,174,0.3);
+    border-left: 4px solid #00ffae;
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 25px;
+    color: var(--text);
+}
+
+/* LANGUAGE SWITCH */
+.lang-switch {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+}
+
+.lang-switch select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+</style>
+
+<div class="help-container">
+
+```
+<!-- LANGUAGE SWITCH -->
+<div class="lang-switch">
+    <form action="{% url 'set_language' %}" method="post">
+        {% csrf_token %}
+        <select name="language" onchange="this.form.submit()">
+            <option value="en" {% if LANGUAGE_CODE == 'en' %}selected{% endif %}>English</option>
+            <option value="ka" {% if LANGUAGE_CODE == 'ka' %}selected{% endif %}>ქართული</option>
+        </select>
+    </form>
+</div>
+
+<!-- HEADER -->
+<div class="help-header">
+    <h1>{% trans "Buying on Resselix" %}</h1>
+    <p>{% trans "Everything you need to know to shop safely and confidently" %}</p>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="help-card">
+    <h3>{% trans "How It Works" %}</h3>
+
+    <div class="step">
+        <div class="step-number">1</div>
+        <div class="step-content">
+            <h4>{% trans "Discover Products" %}</h4>
+            <p>{% trans "Browse categories or use search to find items instantly." %}</p>
+        </div>
+    </div>
+
+    <div class="step">
+        <div class="step-number">2</div>
+        <div class="step-content">
+            <h4>{% trans "Add to Cart" %}</h4>
+            <p>{% trans "Save items and review them anytime before checkout." %}</p>
+        </div>
+    </div>
+
+    <div class="step">
+        <div class="step-number">3</div>
+        <div class="step-content">
+            <h4>{% trans "Checkout Securely" %}</h4>
+            <p>{% trans "Complete your purchase safely using supported payment options." %}</p>
+        </div>
+    </div>
+</div>
+
+<!-- SAFETY -->
+<div class="help-card">
+    <h3>{% trans "Stay Safe While Buying" %}</h3>
+
+    <div class="safety-grid">
+        <div class="safety-item">
+            <h5>{% trans "Check Seller Profiles" %}</h5>
+            <p>{% trans "Review ratings and activity before buying." %}</p>
+        </div>
+
+        <div class="safety-item">
+            <h5>{% trans "Read Descriptions" %}</h5>
+            <p>{% trans "Always verify product details and images." %}</p>
+        </div>
+
+        <div class="safety-item">
+            <h5>{% trans "Use Platform Payments" %}</h5>
+            <p>{% trans "Avoid deals outside the platform." %}</p>
+        </div>
+
+        <div class="safety-item">
+            <h5>{% trans "Report Issues" %}</h5>
+            <p>{% trans "Report suspicious activity immediately." %}</p>
+        </div>
+    </div>
+
+    <div class="tip-box">
+        <strong>{% trans "Pro Tip:" %}</strong>
+        {% trans "Always check seller history before purchasing expensive items." %}
+    </div>
+</div>
+```
+
+</div>
+
+{% endblock %}

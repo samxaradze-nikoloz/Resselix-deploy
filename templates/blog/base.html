@@ -1,6 +1,8 @@
 {% load static %}
+{% load i18n %}
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ LANGUAGE_CODE }}">
 
 <head>
     <meta charset="utf-8">
@@ -22,9 +24,10 @@
             top: 110%;
             left: 0;
             width: 100%;
-            background: white;
+            background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: 10px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.35);
             z-index: 9999;
             overflow: hidden;
             display: none;
@@ -34,8 +37,8 @@
             font-size: 12px;
             font-weight: 700;
             padding: 8px 12px;
-            background: #f5f5f5;
-            color: #555;
+            background: var(--bg);
+            color: var(--muted);
         }
 
         .search-item {
@@ -45,11 +48,11 @@
             gap: 10px;
             cursor: pointer;
             text-decoration: none;
-            color: black;
+            color: var(--text);
         }
 
         .search-item:hover {
-            background: #f0f0f0;
+            background: rgba(0,255,174,0.08);
         }
 
         .search-avatar {
@@ -57,6 +60,24 @@
             height: 28px;
             border-radius: 50%;
             object-fit: cover;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            transition: background 0.25s ease, color 0.25s ease;
+        }
+
+        .navbar-modern,
+        .nav-links,
+        .page-content {
+            transition: background 0.25s ease, color 0.25s ease;
+        }
+
+        .custom-alert {
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
         }
     </style>
 </head>
@@ -75,7 +96,7 @@
              name="q"
              class="search-input"
              type="text"
-             placeholder="Search products or users..."
+             placeholder="{% trans 'Search products or users...' %}"
              autocomplete="off">
 
       <button class="search-btn" type="submit">
@@ -85,12 +106,12 @@
       <div id="searchResults" class="search-results"></div>
     </form>
 
-    <div class="nav-actions">
-      <a href="{% url 'blog-about' %}" class="nav-link">About</a>
+    <div class="nav-links d-flex align-items-center gap-3">
 
       {% if user.is_authenticated %}
+
         <a href="{% url 'post-create' %}" class="nav-link d-flex align-items-center gap-1">
-          <i class="bi bi-plus-circle"></i> Sell
+          <i class="bi bi-plus-circle"></i> {% trans "Sell" %}
         </a>
 
         <a href="{% url 'inbox' %}" class="nav-link">
@@ -106,33 +127,33 @@
 
         <a href="{% url 'profile' %}" class="nav-link d-flex align-items-center gap-2">
           {% if user.profile and user.profile.image %}
-            <img src="{{ user.profile.image.url }}"
-                 style="width:32px;height:32px;border-radius:50%;object-fit:cover;">
+            <img src="{{ user.profile.image.url }}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">
           {% else %}
-            <img src="{% static 'users/default.jpg' %}"
-                 style="width:32px;height:32px;border-radius:50%;object-fit:cover;">
+            <img src="{% static 'users/default.jpg' %}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">
           {% endif %}
           <span>{{ user.username }}</span>
         </a>
 
-
       {% else %}
-        <a href="{% url 'login' %}" class="nav-link">Sign in</a>
-        <a href="{% url 'register' %}" class="nav-link">Create account</a>
+
+        <a href="{% url 'login' %}" class="nav-link">{% trans "Sign in" %}</a>
+        <a href="{% url 'register' %}" class="nav-link">{% trans "Create account" %}</a>
+
       {% endif %}
+
     </div>
 
   </div>
 </nav>
 
 {% if messages %}
-  <div class="container mt-3">
+<div class="container mt-3">
     {% for message in messages %}
-      <div class="alert alert-{{ message.tags }} custom-alert">
-        {{ message }}
-      </div>
+        <div class="alert alert-{{ message.tags }} custom-alert">
+            {{ message }}
+        </div>
     {% endfor %}
-  </div>
+</div>
 {% endif %}
 
 <main class="container page-content">
@@ -143,43 +164,44 @@
 
 <script>
 (function () {
-  const currentTheme = localStorage.getItem("theme");
-  if (currentTheme === "dark") {
+  const theme = localStorage.getItem("theme");
+  if (theme === "dark") {
     document.body.classList.add("dark");
   } else {
     document.body.classList.remove("dark");
   }
 })();
+</script>
 
+<script>
 const input = document.getElementById("liveSearchInput");
 const resultsBox = document.getElementById("searchResults");
 
-let timeout = null;
+if (input && resultsBox) {
+    let timeout = null;
 
-input.addEventListener("input", function () {
-    clearTimeout(timeout);
+    input.addEventListener("input", function () {
+        clearTimeout(timeout);
+        const query = this.value.trim();
 
-    const query = this.value.trim();
+        if (query.length < 1) {
+            resultsBox.style.display = "none";
+            return;
+        }
 
-    if (query.length < 1) {
-        resultsBox.style.display = "none";
-        return;
-    }
-
-    timeout = setTimeout(() => {
-        fetch(`/live-search/?q=${query}`)
-            .then(res => res.json())
-            .then(data => {
-                renderResults(data);
-            });
-    }, 200);
-});
+        timeout = setTimeout(() => {
+            fetch(`/live-search/?q=${query}`)
+                .then(res => res.json())
+                .then(data => renderResults(data));
+        }, 200);
+    });
+}
 
 function renderResults(data) {
     let html = "";
 
     if (data.users.length > 0) {
-        html += `<div class="search-group-title">Users</div>`;
+        html += `<div class="search-group-title">{% trans "Users" %}</div>`;
         data.users.forEach(u => {
             html += `
             <a href="/profile/${u.username}/" class="search-item">
@@ -190,7 +212,7 @@ function renderResults(data) {
     }
 
     if (data.posts.length > 0) {
-        html += `<div class="search-group-title">Products</div>`;
+        html += `<div class="search-group-title">{% trans "Products" %}</div>`;
         data.posts.forEach(p => {
             html += `
             <a href="/post/${p.id}/" class="search-item">
@@ -200,7 +222,7 @@ function renderResults(data) {
     }
 
     if (html === "") {
-        html = `<div class="search-item">No results found</div>`;
+        html = `<div class="search-item">{% trans "No results found" %}</div>`;
     }
 
     resultsBox.innerHTML = html;
@@ -209,7 +231,7 @@ function renderResults(data) {
 
 document.addEventListener("click", function(e){
     if (!e.target.closest(".search-wrap")) {
-        resultsBox.style.display = "none";
+        if (resultsBox) resultsBox.style.display = "none";
     }
 });
 </script>

@@ -1058,3 +1058,469 @@ body.dark .cart-modal-box {
     background: #111;
     color: white;
 }
+
+
+
+.forum-container {
+  max-width: 900px;
+  margin: auto;
+  padding: 20px;
+}
+
+.forum-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.forum-create {
+  background: linear-gradient(135deg, #00ffae, #00c3ff);
+  padding: 8px 14px;
+  border-radius: 8px;
+  color: #000;
+  text-decoration: none;
+}
+
+.forum-post {
+  background: #111;
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+  border: 1px solid #222;
+}
+
+.forum-post h3 {
+  color: #fff;
+}
+
+.forum-meta {
+  font-size: 12px;
+  color: #888;
+  margin-top: 10px;
+}
+
+.like-btn {
+  margin-top: 10px;
+  background: none;
+  border: none;
+  color: #00ffae;
+  cursor: pointer;
+}
+
+
+
+
+
+./* =========================
+   CTA BAR (MODERN DARK MODE STYLE)
+========================= */
+.cta-bar {
+  position: fixed;
+  bottom: 20px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  z-index: 999;
+  pointer-events: none;
+}
+
+.cta-inner {
+  pointer-events: all;
+  width: 95%;
+  max-width: 950px;
+
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+
+  padding: 16px 20px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  backdrop-filter: blur(12px);
+
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+
+  animation: slideUp 0.35s ease;
+  transition: 0.3s ease;
+}
+
+/* TEXT */
+.cta-text h4 {
+  color: var(--text);
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.cta-text p {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ACTIONS */
+.cta-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cta-link {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 14px;
+  transition: 0.2s ease;
+}
+
+.cta-link:hover {
+  color: var(--accent);
+}
+
+/* PRIMARY BUTTON */
+.cta-primary {
+  background: linear-gradient(135deg, var(--accent), #00c3ff);
+  color: #000;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 700;
+  text-decoration: none;
+
+  transition: 0.25s ease;
+}
+
+.cta-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px rgba(0,255,174,0.25);
+}
+
+/* =========================
+   DARK MODE TOGGLE (MODERN SWITCH)
+========================= */
+.dark-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+/* switch base */
+.switch {
+  position: relative;
+  width: 46px;
+  height: 24px;
+}
+
+/* hidden checkbox */
+.switch input {
+  display: none;
+}
+
+/* slider */
+.slider {
+  position: absolute;
+  inset: 0;
+  background: var(--border);
+  border-radius: 999px;
+  transition: 0.3s;
+}
+
+/* circle */
+.slider::before {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  left: 3px;
+  top: 3px;
+  background: var(--text);
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+/* ON STATE */
+.switch input:checked + .slider {
+  background: linear-gradient(135deg, var(--accent), #00c3ff);
+}
+
+.switch input:checked + .slider::before {
+  transform: translateX(22px);
+  background: #000;
+}
+
+/* =========================
+   GRID (YOU MENTIONED FIX STYLE)
+========================= */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+/* =========================
+   CARD MODERN (CONSISTENT FIX)
+========================= */
+.card-modern {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: 0.25s ease;
+}
+
+.card-modern:hover {
+  transform: translateY(-4px);
+  border-color: var(--accent);
+  box-shadow: 0 10px 25px rgba(0,255,174,0.12);
+}
+
+/* IMAGE */
+.image-box {
+  position: relative;
+  height: 180px;
+  background: var(--bg);
+}
+
+.image-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.no-img {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--muted);
+}
+
+/* CONTENT */
+.content {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* PRICE */
+.price {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* =========================
+   ANIMATION
+========================= */
+@keyframes slideUp {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.sell-hero {
+  text-align: center;
+  padding: 60px 20px 30px;
+}
+
+.sell-hero h1 {
+  font-size: 36px;
+  color: #fff;
+}
+
+.sell-hero p {
+  color: #aaa;
+}
+
+.sell-steps {
+  max-width: 900px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+.step {
+  background: #111;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #222;
+}
+
+.step h3 {
+  color: #00ffae;
+}
+
+.step p {
+  color: #ccc;
+}
+
+.sell-cta {
+  text-align: center;
+  margin: 40px 0;
+}
+
+.sell-btn {
+  background: linear-gradient(135deg, #00ffae, #00c3ff);
+  color: #000;
+  padding: 12px 24px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+
+
+/* =========================
+   FORUM STYLES
+========================= */
+.forum-container {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.forum-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+/* FORUM POST CARD */
+.forum-post {
+    background: var(--surface);
+    padding: 24px;
+    border-radius: 16px;
+    margin-bottom: 18px;
+    border: 1px solid var(--border);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.forum-post:hover {
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.forum-post h3 {
+    margin: 0 0 10px 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.forum-meta {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 12px;
+}
+
+/* LIKE & COMMENT BUTTONS */
+.forum-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border);
+}
+
+.like-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--accent);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.like-btn:hover {
+    background: rgba(45, 212, 191, 0.1);
+    border-color: var(--accent);
+}
+
+/* This makes the button actually appear with your Teal/Blue theme */
+.forum-create {
+    background: linear-gradient(135deg, var(--accent), #00c3ff);
+    color: #000 !important;
+    font-weight: 700;
+    font-size: 14px;
+    border-radius: 10px;
+    text-align: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: inline-block;
+    text-decoration: none;
+}
+
+.forum-create:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(45, 212, 191, 0.4);
+    color: #000;
+}
+
+/* Ensure the textarea doesn't hide everything */
+.forum-input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+}
+
+/* COMMENT BOX */
+.comment-section {
+    margin-top: 40px;
+}
+
+.comment-card {
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 10px;
+}
+
+.comment-author {
+    font-weight: 600;
+    color: var(--accent);
+    font-size: 14px;
+}
+
+.comment-text {
+    margin-top: 5px;
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+/* FORM INPUTS (DARK STYLE) */
+.forum-input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    color: var(--text);
+    font-family: inherit;
+    margin-bottom: 15px;
+}
+
+.forum-input:focus {
+    outline: 2px solid var(--accent);
+    border-color: transparent;
+}

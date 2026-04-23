@@ -1,0 +1,208 @@
+{% extends "blog/base.html" %}
+{% block content %}
+
+<style>
+.forum-container {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+.forum-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.forum-create {
+  background: linear-gradient(135deg, var(--accent), #00c3ff);
+  padding: 10px 15px;
+  border-radius: 10px;
+  color: #000;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.search-box {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+  margin-bottom: 20px;
+}
+
+.forum-post {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 15px;
+}
+
+.forum-post:hover {
+  transform: translateY(-2px);
+  transition: 0.2s;
+}
+
+.forum-meta {
+  font-size: 13px;
+  color: var(--muted);
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.ebay-stats {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.stat {
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--bg);
+  padding: 6px 10px;
+  border-radius: 10px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.open-link {
+  display: inline-block;
+  margin-top: 10px;
+  color: var(--accent);
+  font-weight: 700;
+  text-decoration: none;
+  font-size: 13px;
+}
+</style>
+
+<div class="forum-container">
+
+  <div class="forum-header">
+    <h2>Resselix Community</h2>
+    <a href="{% url 'create_post' %}" class="forum-create">+ Create Post</a>
+  </div>
+
+  <input type="text" id="searchInput" class="search-box" placeholder="Search posts...">
+
+  <div id="postsContainer">
+
+    {% for post in posts %}
+
+      {% if post.pk %}
+
+      <div class="forum-post">
+
+        <a href="{% url 'forum-post-detail' post.pk %}" style="text-decoration:none;">
+          <h3 style="margin:0;">{{ post.title }}</h3>
+        </a>
+
+        <p style="color:var(--muted); margin-top:8px;">
+          {{ post.content|truncatewords:20 }}
+        </p>
+
+        <div class="forum-meta">
+          <span>@{{ post.author.username }}</span>
+          <span>{{ post.created|timesince }} ago</span>
+        </div>
+
+        <div class="ebay-stats">
+          <div class="stat">❤️ {{ post.likes.count }}</div>
+          <div class="stat">💬 {{ post.comments.count }}</div>
+        </div>
+
+        <a href="{% url 'forum-post-detail' post.pk %}" class="open-link">
+          Open Discussion
+        </a>
+
+      </div>
+
+      {% endif %}
+
+    {% endfor %}
+
+  </div>
+
+</div>
+
+<script>
+const input = document.getElementById("searchInput");
+const container = document.getElementById("postsContainer");
+
+function escapeHtml(text) {
+  return text
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function searchPosts(query) {
+  fetch(`/forum/search/?q=${encodeURIComponent(query)}`)
+    .then(res => res.json())
+    .then(data => {
+
+      container.innerHTML = "";
+
+      if (!data.posts.length) {
+        container.innerHTML = "<p style='color:var(--muted);'>No results found</p>";
+        return;
+      }
+
+      data.posts.forEach(post => {
+
+        container.innerHTML += `
+          <div class="forum-post">
+
+            <a href="/forum/post/${post.id}/" style="text-decoration:none;">
+              <h3 style="margin:0;">${escapeHtml(post.title)}</h3>
+            </a>
+
+            <p style="color:var(--muted); margin-top:8px;">
+              ${escapeHtml(post.content)}
+            </p>
+
+            <div class="forum-meta">
+              <span>@${escapeHtml(post.author)}</span>
+              <span>${post.created}</span>
+            </div>
+
+            <div class="ebay-stats">
+              <div class="stat">❤️ ${post.likes}</div>
+              <div class="stat">💬 ${post.comments}</div>
+            </div>
+
+            <a href="/forum/post/${post.id}/" class="open-link">
+              Open Discussion
+            </a>
+
+          </div>
+        `;
+      });
+
+    });
+}
+
+input.addEventListener("input", function () {
+  searchPosts(this.value);
+});
+
+input.addEventListener("keydown", function (e) {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    searchPosts(this.value);
+  }
+});
+</script>
+
+{% endblock %}

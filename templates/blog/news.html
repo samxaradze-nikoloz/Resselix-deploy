@@ -1,0 +1,22 @@
+{% extends "blog/base.html" %}
+{% block content %}
+<div class="site-container" style="margin-top: 50px; min-height: 70vh;">
+    <h2 class="section-title">Platform News</h2>
+    
+    <div class="card-modern" style="padding: 30px; margin-bottom: 20px; border-left: 5px solid #6a29ff;">
+        <span style="background: #6a29ff; color: white; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; text-transform: uppercase;">Launch</span>
+        
+        <h3 style="margin-top: 15px; font-size: 24px; font-weight: 800;">WE LAUNCHED!</h3>
+        <p style="color: var(--muted); font-size: 14px;">April 23, 2026</p>
+        
+        <p style="font-size: 16px; line-height: 1.6; margin-top: 15px;">
+            The Resselix website is now officially live! We are excited to provide a modern, fast, and secure marketplace for our community. Start exploring products or list your own items today.
+        </p>
+        
+        <div style="margin-top: 25px;">
+            <a href="{% url 'post-create' %}" class="btn-modern-save" style="text-decoration: none; display: inline-block;">Start Selling</a>
+            <a href="{% url 'blog-home' %}" style="margin-left: 15px; color: var(--muted); font-size: 14px; text-decoration: underline;">Browse Marketplace</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

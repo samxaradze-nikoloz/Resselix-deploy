@@ -1,0 +1,28 @@
+{% extends "blog/base.html" %}
+{% block content %}
+<div class="forum-container" style="margin-top: 50px;">
+    <h2 class="section-title">Create a Discussion</h2>
+    
+    <div class="card-modern" style="padding: 30px; background: #111; border: 1px solid #222;">
+        <form method="POST">
+            {% csrf_token %}
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; color: #888; margin-bottom: 8px; font-size: 14px;">Topic Title</label>
+                <input type="text" name="title" placeholder="What's on your mind?" required 
+                       style="width: 100%; padding: 12px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: #fff; outline: none;">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; color: #888; margin-bottom: 8px; font-size: 14px;">Content</label>
+                <textarea name="content" rows="6" placeholder="Describe your topic in detail..." required
+                          style="width: 100%; padding: 12px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: #fff; outline: none; resize: vertical;"></textarea>
+            </div>
+
+            <div style="display: flex; gap: 15px;">
+                <button type="submit" class="forum-create" style="border: none; cursor: pointer; font-weight: 600;">Post to Community</button>
+                <a href="{% url 'forum_home' %}" style="padding: 8px 14px; color: #888; text-decoration: none; font-size: 14px; margin-top: 5px;">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -68,6 +68,7 @@ SITE_ID = 2
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -201,3 +202,17 @@ SOCIALACCOUNT_ADAPTER = 'allauth.socialaccount.adapter.DefaultSocialAccountAdapt
 
 SOCIALACCOUNT_EMAIL_VERIFICATION = "none" 
 SOCIALACCOUNT_EMAIL_REQUIRED = True
+
+
+LANGUAGE_CODE = 'en'
+
+USE_I18N = True
+
+LANGUAGES = [
+    ('en', 'English'),
+    ('ka', 'Georgian'),
+]
+
+LOCALE_PATHS = [
+    BASE_DIR / 'locale',
+]

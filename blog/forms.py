@@ -47,3 +47,31 @@ PostImageFormSet = modelformset_factory(
         })
     }
 )
+
+
+
+from .models import PostComment, ForumComment
+
+
+class PostCommentForm(forms.ModelForm):
+    class Meta:
+        model = PostComment
+        fields = ['content']
+        widgets = {
+            'content': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Write a comment...'
+            })
+        }
+
+
+class ForumCommentForm(forms.ModelForm):
+    class Meta:
+        model = ForumComment
+        fields = ['content']
+        widgets = {
+            'content': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Write a reply...'
+            })
+        }

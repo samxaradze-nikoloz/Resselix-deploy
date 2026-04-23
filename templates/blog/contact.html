@@ -1,0 +1,29 @@
+{% extends "blog/base.html" %}
+{% block content %}
+<div class="site-container" style="margin-top: 50px; min-height: 70vh;">
+    <h2 class="section-title">Contact Us</h2>
+    <div class="card-modern" style="padding: 30px; max-width: 800px; margin: 0 auto;">
+        <p>Have a question? We're here to help. Reach out to the team through any of the channels below.</p>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 30px;">
+            <div style="background: #f9f9f9; padding: 20px; border-radius: 10px; text-align: center;">
+                <h4 style="color: #6a29ff;">General Support</h4>
+                <p style="font-size: 14px;">Questions about your order or account?</p>
+                <a href="mailto:support@resselix.com" class="btn btn-sm btn-outline-dark">Email Support</a>
+            </div>
+            
+            <div style="background: #f9f9f9; padding: 20px; border-radius: 10px; text-align: center;">
+                <h4 style="color: #6a29ff;">Report a Bug</h4>
+                <p style="font-size: 14px;">Notice something not working right?</p>
+                <a href="mailto:dev@resselix.com?subject=Bug Report" class="btn btn-sm btn-outline-dark">Email Dev Team</a>
+            </div>
+
+            <div style="background: #f9f9f9; padding: 20px; border-radius: 10px; text-align: center;">
+                <h4 style="color: #6a29ff;">Socials</h4>
+                <p style="font-size: 14px;">Follow us for daily updates.</p>
+                <a href="https://instagram.com/yourprofile" class="btn btn-sm btn-outline-dark">Instagram</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

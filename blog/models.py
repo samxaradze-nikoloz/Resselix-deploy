@@ -62,15 +62,75 @@ class CartItem(models.Model):
         return self.quantity * self.post.price
 
 
-class Comment(models.Model):
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
 
+
+
+class ForumPost(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
+    title = models.CharField(max_length=200)
     content = models.TextField()
-  
-    date_posted = models.DateTimeField(default=timezone.now)
+    created = models.DateTimeField(auto_now_add=True)
+
+    def total_likes(self):
+        return self.likes.count()
 
     def __str__(self):
-        return f"Comment by {self.author.username} on {self.post.title}"
+        return self.title
+
+class Comment(models.Model):
+    post = models.ForeignKey(
+        Post,
+        on_delete=models.CASCADE,
+        related_name="comments"
+    )
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    content = models.TextField()
+    created = models.DateTimeField(auto_now_add=True)
+
+    parent = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        related_name="replies",
+        on_delete=models.CASCADE
+    )
+
+    def is_reply(self):
+        return self.parent_id is not None
+
+class Like(models.Model):
+    post = models.ForeignKey(ForumPost, on_delete=models.CASCADE, related_name="likes")
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('post', 'user')
 
 
+
+
+class ForumComment(models.Model):
+    post = models.ForeignKey(
+    ForumPost,
+    on_delete=models.CASCADE,
+    related_name="forum_comments"
+)
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    content = models.TextField()
+    created = models.DateTimeField(auto_now_add=True)
+
+    parent = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        related_name="replies",
+        on_delete=models.CASCADE
+    )
+
+class PostComment(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="post_comments")
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    content = models.TextField()
+    created = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Comment by {self.author} on {self.post.title}"

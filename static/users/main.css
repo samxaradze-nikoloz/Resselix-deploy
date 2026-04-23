@@ -566,20 +566,94 @@ input:focus {
 
 
 .logout-modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.6);
-  justify-content: center;
-  align-items: center;
-  z-index: 10000;
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(6px);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
 }
 
 .logout-box {
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  text-align: center;
+    background: #111;
+    color: #fff;
+    padding: 30px;
+    border-radius: 18px;
+    width: 100%;
+    max-width: 360px;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    animation: popIn 0.25s ease;
+}
+
+
+.logout-box h3 {
+    font-size: 20px;
+    margin-bottom: 20px;
+}
+
+
+.logout-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+/* CONFIRM BUTTON */
+.logout-confirm {
+    background: linear-gradient(135deg, #ff3b3b, #ff0000);
+    border: none;
+    padding: 10px 16px;
+    border-radius: 10px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.logout-confirm:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255,0,0,0.4);
+}
+
+
+.logout-cancel {
+    background: #222;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 10px;
+    color: #ddd;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.logout-cancel:hover {
+    background: #333;
+}
+
+/* ANIMATION */
+@keyframes popIn {
+    from {
+        transform: scale(0.85);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+
+body:not(.dark) .logout-box {
+    background: #fff;
+    color: #111;
+}
+
+body:not(.dark) .logout-cancel {
+    background: #eee;
+    color: #333;
 }
 .theme-btn {
   padding: 8px 12px;

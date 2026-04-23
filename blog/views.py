@@ -1,38 +1,35 @@
 import os
 from collections import OrderedDict
+from rapidfuzz import process, fuzz
+from django.db import models
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.db.models import Q
 
-from .forms import PostForm
-from .models import Post, PostImage, CartItem
+from .models import (
+    Post,
+    ForumPost,
+    PostImage,
+    CartItem,
+    Like,
+    PostComment,
+    ForumComment,
+    Comment
+)
+
+from .forms import PostForm, PostCommentForm, ForumCommentForm
+
 from users.models import Message
-from .models import Comment
-
-from rapidfuzz import process, fuzz
-
-
-from django.db.models import Q
-from collections import OrderedDict
-
-from django.db.models import Q
-from collections import OrderedDict
+from django.db import models
 from django.views.generic import ListView
+from rapidfuzz import fuzz
+
 from .models import Post
 
-
-from rapidfuzz import process
-from django.db.models import Q
-from django.views.generic import ListView
-from collections import OrderedDict
-from .models import Post
-
-from .models import Comment
-from django import forms
 
 class PostListView(ListView):
     model = Post
@@ -48,79 +45,39 @@ class PostListView(ListView):
             'author__profile'
         ).prefetch_related('images')
 
-        if query:
-            scored_posts = []
+        if category:
+            queryset = queryset.filter(category=category)
 
+        if subcategory:
+            queryset = queryset.filter(subcategory=subcategory)
+
+        if query:
+            scored = []
             for post in queryset:
                 score = max(
                     fuzz.partial_ratio(query.lower(), post.title.lower()),
                     fuzz.partial_ratio(query.lower(), post.content.lower())
                 )
                 if score > 40:
-                    scored_posts.append((score, post))
+                    scored.append((score, post))
 
-            scored_posts.sort(reverse=True, key=lambda x: x[0])
-            queryset = [p for _, p in scored_posts]
-
-        if category:
-            queryset = [p for p in queryset if p.category == category]
-
-        if subcategory:
-            queryset = [p for p in queryset if p.subcategory == subcategory]
+            scored.sort(reverse=True, key=lambda x: x[0])
+            queryset = [p for _, p in scored]
 
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        query = self.request.GET.get('q', '')
+        posts = context['posts']
 
-        users = []
+        categorized = OrderedDict()
 
-        if query:
-            all_users = User.objects.select_related('profile').all()
+        for post in posts:
+            label = post.category if post.category else "Other"
+            categorized.setdefault(label, []).append(post)
 
-            usernames = [u.username for u in all_users]
-
-            matches = process.extract(
-                query,
-                usernames,
-                limit=10,
-                score_cutoff=60
-            )
-
-            matched_names = [m[0] for m in matches]
-
-            users = [
-                u for u in all_users
-                if u.username in matched_names
-            ]
-
-        filtered_posts = context['posts']
-
-        categories = OrderedDict([
-            ('accessories', 'Accessories'),
-            ('accounts', 'Accounts'),
-            ('sports', 'Sports'),
-            ('fashion', 'Fashion'),
-            ('electronics', 'Electronics'),
-            ('home', 'Home'),
-            ('misc', 'Miscellaneous'),
-        ])
-
-        categorized_posts = OrderedDict()
-
-        for key, label in categories.items():
-            cat_list = [
-                p for p in filtered_posts if p.category == key
-            ]
-            if cat_list:
-                categorized_posts[label] = cat_list
-
-        context['users'] = users
-        context['categorized_posts'] = categorized_posts
-        context['query'] = query
-
+        context['categorized_posts'] = categorized
         return context
 class UserPostListView(ListView):
     model = Post
@@ -142,13 +99,10 @@ class PostDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        post = self.get_object()
+        post = self.object
 
-        context['comments'] = Comment.objects.filter(
-            post=post
-        ).order_by('-date_posted')
-
-        context['comment_form'] = CommentForm()
+        context['comments'] = post.post_comments.select_related('author').order_by('-created')
+        context['comment_form'] = PostCommentForm()
         context['images'] = PostImage.objects.filter(post=post)
 
         return context
@@ -159,19 +113,15 @@ class PostDetailView(DetailView):
         if not request.user.is_authenticated:
             return redirect('login')
 
-        form = CommentForm(request.POST)
+        form = PostCommentForm(request.POST)
 
         if form.is_valid():
             comment = form.save(commit=False)
             comment.post = self.object
             comment.author = request.user
             comment.save()
-            return redirect('post-detail', pk=self.object.pk)
 
-        context = self.get_context_data()
-        context['comment_form'] = form
-        return self.render_to_response(context)
-
+        return redirect('post-detail', pk=self.object.pk)
 class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Post
     form_class = PostForm
@@ -220,7 +170,6 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
 
 
-
 @login_required
 def add_to_cart(request, pk):
     post = get_object_or_404(Post, pk=pk)
@@ -231,7 +180,6 @@ def add_to_cart(request, pk):
         item.save()
 
     return redirect('cart-detail')
-
 
 @login_required
 def cart_detail(request):
@@ -318,18 +266,6 @@ def about(request):
 
 
 
-class CommentForm(forms.ModelForm):
-    class Meta:
-        model = Comment
-        fields = ['content']
-        widgets = {
-            # Changed 'format' to 'forms'
-            'content': forms.TextInput(attrs={
-                'placeholder': 'Add a comment...', 
-                'class': 'form-control'
-            }),
-        }
-
 
 
 
@@ -351,14 +287,10 @@ def live_search(request):
             for u in users
         ],
         "posts": [
-            {
-                "id": p.id,
-                "title": p.title
-            }
+            {"id": p.id, "title": p.title}
             for p in posts
         ]
     })
-
 
 
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -375,3 +307,139 @@ class MyListingsView(LoginRequiredMixin, ListView):
             author=self.request.user,
             is_sold=False
         ).select_related('author__profile').prefetch_related('images').order_by('-date_posted')
+
+
+
+
+from django.db import models
+from django.contrib.auth.models import User
+
+
+
+def forum_home(request):
+    posts = ForumPost.objects.filter(id__isnull=False).order_by('-created')
+    return render(request, 'forum/home.html', {'posts': posts})
+
+@login_required
+def create_post(request):
+    if request.method == "POST":
+        ForumPost.objects.create(
+            author=request.user,
+            title=request.POST.get('title'),
+            content=request.POST.get('content')
+        )
+        return redirect('forum_home')
+    return render(request, 'forum/create.html')
+
+@login_required
+def post_detail(request, pk):
+    post = get_object_or_404(ForumPost, pk=pk)
+
+    if request.method == "POST":
+        content = request.POST.get("content", "").strip()
+        parent_id = request.POST.get("parent_id")
+
+        if content:
+            ForumComment.objects.create(
+                post=post,
+                author=request.user,
+                content=content,
+                parent_id=parent_id if parent_id else None
+            )
+
+        return redirect("forum-post-detail", pk=post.pk)
+
+    comments = post.forum_comments.select_related("author").order_by("-created")
+
+    return render(request, "forum/detail.html", {
+        "post": post,
+        "comments": comments,
+        "form": ForumCommentForm()
+    })
+@login_required
+def like_post(request, pk):
+    post = get_object_or_404(ForumPost, pk=pk)
+
+    like, created = Like.objects.get_or_create(post=post, user=request.user)
+
+    if not created:
+        like.delete()
+
+    return redirect(request.META.get('HTTP_REFERER', 'forum_home'))
+
+def how_to_sell(request):
+    return render(request, 'blog/how_to_sell.html')
+
+
+
+from django.shortcuts import render
+
+def contact_us(request):
+    return render(request, 'blog/contact.html')
+
+def buying_help(request):
+    return render(request, 'blog/buying_help.html')
+
+def company_info(request):
+    return render(request, 'blog/company_info.html')
+
+def news_updates(request):
+
+    return render(request, 'blog/news.html')    
+
+
+
+
+@login_required
+def delete_comment(request, pk):
+    comment = get_object_or_404(Comment, pk=pk)
+
+    if comment.author != request.user:
+        return redirect('post_detail', pk=comment.post.pk)
+
+    post_pk = comment.post.pk
+    comment.delete()
+
+    return redirect('post_detail', pk=post_pk)
+
+@login_required
+def delete_forum_post(request, pk):
+    post = get_object_or_404(ForumPost, pk=pk)
+
+    if request.user != post.author:
+        return redirect('forum_home')
+
+    if request.method == "POST":
+        post.delete()
+
+    return redirect('forum_home')
+
+
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_GET
+
+@require_GET
+def forum_search(request):
+    query = request.GET.get("q", "").strip()
+
+    posts = ForumPost.objects.all().select_related("author")
+
+    if query:
+        posts = posts.filter(title__icontains=query)
+
+    return JsonResponse({
+        "posts": [
+            {
+                "id": p.id,
+                "title": p.title,
+                "content": p.content[:80],
+                "author": p.author.username,
+                "likes": p.total_likes() if hasattr(p, "total_likes") else p.likes.count(),
+                "comments": p.comments.count() if hasattr(p, "comments") else 0,
+                "created": p.created.strftime("%b %d, %Y")
+            }
+            for p in posts
+        ]
+    })
+

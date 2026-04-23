@@ -1,0 +1,159 @@
+{% extends "blog/base.html" %}
+{% load static %}
+
+{% block content %}
+
+<style>
+.sell-hero {
+    text-align: center;
+    padding: 70px 20px 30px;
+}
+
+.sell-hero h1 {
+    font-size: 38px;
+    font-weight: 800;
+    color: var(--text);
+}
+
+.sell-hero p {
+    color: var(--muted);
+    margin-top: 8px;
+    font-size: 15px;
+}
+
+/* STEPS GRID */
+.sell-steps {
+    max-width: 1000px;
+    margin: 40px auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    padding: 0 20px;
+}
+
+/* STEP CARD */
+.step {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px;
+    transition: 0.25s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.step:hover {
+    transform: translateY(-5px);
+    border-color: #00ffae;
+    box-shadow: 0 10px 25px rgba(0,255,174,0.12);
+}
+
+/* STEP NUMBER BADGE */
+.step::before {
+    content: "";
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(135deg, #00ffae, #00c3ff);
+    opacity: 0.15;
+    border-radius: 50%;
+}
+
+.step h3 {
+    color: var(--text);
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.step p {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* CTA SECTION */
+.sell-cta {
+    text-align: center;
+    margin: 50px 0;
+}
+
+/* BUTTON */
+.sell-btn {
+    display: inline-block;
+    background: linear-gradient(135deg, #00ffae, #00c3ff);
+    color: #000;
+    padding: 14px 28px;
+    border-radius: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: 0.25s ease;
+    box-shadow: 0 0 0 rgba(0,0,0,0);
+}
+
+.sell-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0,255,174,0.25);
+}
+
+/* SMALL SUBTEXT */
+.sell-sub {
+    color: var(--muted);
+    margin-top: 10px;
+    font-size: 13px;
+}
+</style>
+
+<!-- HERO -->
+
+<div class="sell-hero">
+    <h1>Start Selling on Resselix</h1>
+    <p>Turn your items into income. Reach real buyers instantly.</p>
+</div>
+
+<!-- STEPS -->
+
+<div class="sell-steps">
+
+```
+<div class="step">
+    <h3>1. Create an Account</h3>
+    <p>Sign up in seconds and unlock your seller dashboard with full access.</p>
+</div>
+
+<div class="step">
+    <h3>2. List Your Product</h3>
+    <p>Upload photos, set a price, and write a clear description to attract buyers.</p>
+</div>
+
+<div class="step">
+    <h3>3. Connect With Buyers</h3>
+    <p>Chat directly with interested users and negotiate deals in real time.</p>
+</div>
+
+<div class="step">
+    <h3>4. Get Paid Securely</h3>
+    <p>Complete sales safely with trusted platform transactions.</p>
+</div>
+```
+
+</div>
+
+<!-- CTA -->
+
+<div class="sell-cta">
+
+```
+{% if user.is_authenticated %}
+    <a href="{% url 'post-create' %}" class="sell-btn">Start Selling</a>
+    <div class="sell-sub">You’re ready to list your first product</div>
+{% else %}
+    <a href="{% url 'register' %}" class="sell-btn">Create Account</a>
+    <div class="sell-sub">Join Resselix and start selling today</div>
+{% endif %}
+```
+
+</div>
+
+{% endblock %}

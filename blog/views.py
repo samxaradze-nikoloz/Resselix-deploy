@@ -72,12 +72,22 @@ class PostListView(ListView):
         posts = context['posts']
 
         categorized = OrderedDict()
-
         for post in posts:
             label = post.category if post.category else "Other"
             categorized.setdefault(label, []).append(post)
 
         context['categorized_posts'] = categorized
+
+        base_queryset = Post.objects.filter(is_sold=False).select_related(
+            'author__profile'
+        ).prefetch_related('images')
+
+        context['popular_posts'] = base_queryset.order_by('-views')[:5]
+
+        context['electronics_posts'] = base_queryset.filter(category='electronics').order_by('-views')[:5]
+        context['fashion_posts'] = base_queryset.filter(category='fashion').order_by('-views')[:5]
+        context['sports_posts'] = base_queryset.filter(category='sports').order_by('-views')[:5]
+
         return context
 class UserPostListView(ListView):
     model = Post
@@ -95,6 +105,18 @@ class UserPostListView(ListView):
 class PostDetailView(DetailView):
     model = Post
     template_name = 'blog/post_detail.html'
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+
+        session_key = f"viewed_post_{self.object.id}"
+
+        if not request.session.get(session_key):
+            self.object.views += 1
+            self.object.save(update_fields=['views'])
+            request.session[session_key] = True
+
+        return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -390,36 +412,22 @@ def news_updates(request):
 
 
 
-@login_required
-def delete_comment(request, pk):
-    comment = get_object_or_404(Comment, pk=pk)
-
-    if comment.author != request.user:
-        return redirect('post_detail', pk=comment.post.pk)
-
-    post_pk = comment.post.pk
-    comment.delete()
-
-    return redirect('post_detail', pk=post_pk)
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from .models import Comment
 
 @login_required
-def delete_forum_post(request, pk):
-    post = get_object_or_404(ForumPost, pk=pk)
-
-    if request.user != post.author:
-        return redirect('forum_home')
-
+def delete_forum_comment(request, pk):
+    comment = get_object_or_404(ForumComment, pk=pk)
+    if comment.author != request.user and not request.user.is_staff:
+        return redirect('forum-post-detail', pk=comment.post.pk)
     if request.method == "POST":
-        post.delete()
+        post_pk = comment.post.pk
+        comment.delete()
+        return redirect('forum-post-detail', pk=post_pk)
+    return redirect('forum-post-detail', pk=comment.post.pk)
 
-    return redirect('forum_home')
 
-
-
-from django.http import JsonResponse
-from django.views.decorators.http import require_GET
-
-@require_GET
 def forum_search(request):
     query = request.GET.get("q", "").strip()
 
@@ -443,3 +451,10 @@ def forum_search(request):
         ]
     })
 
+@login_required
+def delete_forum_post(request, pk):
+    post = get_object_or_404(ForumPost, pk=pk, author=request.user)
+    if request.method == "POST":
+        post.delete()
+        return redirect('forum_home')
+    return redirect('forum-post-detail', pk=pk)

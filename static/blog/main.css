@@ -1524,3 +1524,14 @@ body.dark .cart-modal-box {
     outline: 2px solid var(--accent);
     border-color: transparent;
 }
+
+.section-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #111;
+    margin: 20px 0 10px;
+    letter-spacing: 0.2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}

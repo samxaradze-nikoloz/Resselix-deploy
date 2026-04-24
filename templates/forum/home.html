@@ -83,6 +83,14 @@
   text-decoration: none;
   font-size: 13px;
 }
+
+.like-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--accent);
+  font-weight: 700;
+}
 </style>
 
 <div class="forum-container">
@@ -97,9 +105,7 @@
   <div id="postsContainer">
 
     {% for post in posts %}
-
       {% if post.pk %}
-
       <div class="forum-post">
 
         <a href="{% url 'forum-post-detail' post.pk %}" style="text-decoration:none;">
@@ -116,7 +122,10 @@
         </div>
 
         <div class="ebay-stats">
-          <div class="stat">❤️ {{ post.likes.count }}</div>
+          <form method="POST" action="{% url 'like_post' post.pk %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="like-btn">❤️ {{ post.likes.count }}</button>
+          </form>
           <div class="stat">💬 {{ post.comments.count }}</div>
         </div>
 
@@ -125,9 +134,7 @@
         </a>
 
       </div>
-
       {% endif %}
-
     {% endfor %}
 
   </div>
@@ -151,7 +158,6 @@ function searchPosts(query) {
   fetch(`/forum/search/?q=${encodeURIComponent(query)}`)
     .then(res => res.json())
     .then(data => {
-
       container.innerHTML = "";
 
       if (!data.posts.length) {
@@ -160,7 +166,6 @@ function searchPosts(query) {
       }
 
       data.posts.forEach(post => {
-
         container.innerHTML += `
           <div class="forum-post">
 
@@ -178,7 +183,9 @@ function searchPosts(query) {
             </div>
 
             <div class="ebay-stats">
-              <div class="stat">❤️ ${post.likes}</div>
+              <form method="POST" action="/forum/like/${post.id}/" style="display:inline;">
+                <button type="submit" class="like-btn">❤️ ${post.likes}</button>
+              </form>
               <div class="stat">💬 ${post.comments}</div>
             </div>
 
@@ -189,7 +196,6 @@ function searchPosts(query) {
           </div>
         `;
       });
-
     });
 }
 

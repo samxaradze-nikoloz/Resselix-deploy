@@ -30,7 +30,108 @@
         <a href="?category=misc" class="btn btn-sm btn-outline-dark">📦 Misc</a>
     </div>
 
+    {% if not query and not request.GET.category and not request.GET.subcategory %}
+
+    <h3 class="section-title">🔥 Popular</h3>
+    <div style="display:flex; gap:16px; overflow-x:auto; padding-bottom:10px;">
+        {% for post in popular_posts %}
+        <div class="card-modern" style="min-width:220px;">
+            <div class="image-box">
+                <a href="{% url 'post-detail' post.id %}">
+                    {% if post.images.all %}
+                        <img src="{{ post.images.first.image.url }}">
+                    {% else %}
+                        <div class="no-img">No Image</div>
+                    {% endif %}
+                </a>
+            </div>
+            <div class="content">
+                <h4>{{ post.title }}</h4>
+                <div class="price">
+                    <span class="price-val" data-usd="{{ post.price }}">${{ post.price }}</span>
+                    <span class="toggle" onclick="toggleCurrency(this)">⇋ GEL</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <h3 class="section-title">💻 Electronics</h3>
+    <div style="display:flex; gap:16px; overflow-x:auto; padding-bottom:10px;">
+        {% for post in electronics_posts %}
+        <div class="card-modern" style="min-width:220px;">
+            <div class="image-box">
+                <a href="{% url 'post-detail' post.id %}">
+                    {% if post.images.all %}
+                        <img src="{{ post.images.first.image.url }}">
+                    {% else %}
+                        <div class="no-img">No Image</div>
+                    {% endif %}
+                </a>
+            </div>
+            <div class="content">
+                <h4>{{ post.title }}</h4>
+                <div class="price">
+                    <span class="price-val" data-usd="{{ post.price }}">${{ post.price }}</span>
+                    <span class="toggle" onclick="toggleCurrency(this)">⇋ GEL</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <h3 class="section-title">👕 Fashion</h3>
+    <div style="display:flex; gap:16px; overflow-x:auto; padding-bottom:10px;">
+        {% for post in fashion_posts %}
+        <div class="card-modern" style="min-width:220px;">
+            <div class="image-box">
+                <a href="{% url 'post-detail' post.id %}">
+                    {% if post.images.all %}
+                        <img src="{{ post.images.first.image.url }}">
+                    {% else %}
+                        <div class="no-img">No Image</div>
+                    {% endif %}
+                </a>
+            </div>
+            <div class="content">
+                <h4>{{ post.title }}</h4>
+                <div class="price">
+                    <span class="price-val" data-usd="{{ post.price }}">${{ post.price }}</span>
+                    <span class="toggle" onclick="toggleCurrency(this)">⇋ GEL</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <h3 class="section-title">⚽ Sports</h3>
+    <div style="display:flex; gap:16px; overflow-x:auto; padding-bottom:10px;">
+        {% for post in sports_posts %}
+        <div class="card-modern" style="min-width:220px;">
+            <div class="image-box">
+                <a href="{% url 'post-detail' post.id %}">
+                    {% if post.images.all %}
+                        <img src="{{ post.images.first.image.url }}">
+                    {% else %}
+                        <div class="no-img">No Image</div>
+                    {% endif %}
+                </a>
+            </div>
+            <div class="content">
+                <h4>{{ post.title }}</h4>
+                <div class="price">
+                    <span class="price-val" data-usd="{{ post.price }}">${{ post.price }}</span>
+                    <span class="toggle" onclick="toggleCurrency(this)">⇋ GEL</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+
     {% if query %}
+
         <div class="mt-3">
 
             {% if users %}
@@ -51,6 +152,7 @@
 
             <h4 class="fw-bold mt-4 mb-3">Products</h4>
         </div>
+
     {% endif %}
 
     {% if categorized_posts %}
@@ -86,38 +188,7 @@
             {% endfor %}
         </div>
         {% endfor %}
-    {% else %}
-
-        <h3 class="section-title">All Products</h3>
-
-        <div class="grid">
-            {% for post in all_posts %}
-            <div class="card-modern">
-                <div class="image-box">
-                    <a href="{% url 'post-detail' post.id %}">
-                        {% if post.images.all %}
-                            <img src="{{ post.images.first.image.url }}">
-                        {% else %}
-                            <div class="no-img">No Image</div>
-                        {% endif %}
-                    </a>
-                </div>
-
-                <div class="content">
-                    <h4>{{ post.title }}</h4>
-
-                    <div class="price">
-                        <span class="price-val" data-usd="{{ post.price }}">${{ post.price }}</span>
-                        <span class="toggle" onclick="toggleCurrency(this)">⇋ GEL</span>
-                    </div>
-
-                    <a href="{% url 'add-to-cart' post.id %}" class="add-cart-btn" onclick="return confirmAddToCart(event, this)">🛒 Add to Cart</a>
-
-                    <small>{{ post.get_subcategory_display }} • {{ post.date_posted|date:"M d" }}</small>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
+    {% endif %}
 
     {% endif %}
 
@@ -143,9 +214,7 @@
 </div>
 
 <footer style="padding:40px 10%;background:#fff;font-size:13px;color:#555;">
-
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:30px;padding-bottom:30px;border-bottom:1px solid #eee;">
-
         <div>
             <h5 style="font-weight:bold;color:#000;margin-bottom:15px;">Buy</h5>
             <ul style="list-style:none;padding:0;line-height:2;">
@@ -179,9 +248,7 @@
                 <li><a href="{% url 'forum_home' %}" style="text-decoration:none;color:inherit;">Community</a></li>
             </ul>
         </div>
-
     </div>
-
 </footer>
 
 <div id="cartConfirm" class="cart-modal">

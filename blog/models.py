@@ -33,6 +33,8 @@ class Post(models.Model):
     category = models.CharField(max_length=30, choices=MAIN_CATEGORY_CHOICES, default='misc')
     subcategory = models.CharField(max_length=30, choices=SUBCATEGORY_CHOICES, blank=True, null=True)
     is_sold = models.BooleanField(default=False)
+    views = models.PositiveIntegerField(default=0)
+    updated_at = models.DateTimeField(auto_now=True)
     address = models.CharField(max_length=255, blank=True, null=True)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)

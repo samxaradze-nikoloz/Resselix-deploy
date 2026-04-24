@@ -33,6 +33,7 @@ urlpatterns = [
     path('forum/post/<int:pk>/', views.post_detail, name='forum-post-detail'),
     path('forum/like/<int:pk>/', views.like_post, name='like_post'),
     path('forum/search/', views.forum_search, name='forum_search'),
+    path('forum/post/<int:pk>/delete/', views.delete_forum_post, name='delete_forum_post'),
 
     path('how-to-sell/', views.how_to_sell, name='how_to_sell'),
     path('contact/', views.contact_us, name='contact'),
@@ -40,7 +41,8 @@ urlpatterns = [
     path('company-info/', views.company_info, name='company-info'),
     path('news/', views.news_updates, name='news'),
 
-    path('comment/<int:pk>/delete/', views.delete_comment, name='delete-comment'),
+    
+    path('forum/comment/<int:pk>/delete/', views.delete_forum_comment, name='delete-forum-comment'),
 
     path('i18n/', include('django.conf.urls.i18n')),
 ]

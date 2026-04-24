@@ -9,7 +9,6 @@
     margin: 40px auto;
     padding: 0 20px;
 }
-
 .post-box {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -17,7 +16,6 @@
     padding: 25px;
     margin-bottom: 25px;
 }
-
 .input-box {
     width: 100%;
     background: var(--bg);
@@ -27,11 +25,9 @@
     color: var(--text);
     outline: none;
 }
-
 .input-box:focus {
     border-color: var(--accent);
 }
-
 .btn {
     background: linear-gradient(135deg, var(--accent), #00c3ff);
     color: #000;
@@ -41,7 +37,6 @@
     border: none;
     cursor: pointer;
 }
-
 .comment {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -49,24 +44,20 @@
     padding: 18px;
     margin-bottom: 12px;
 }
-
 .reply {
     margin-left: 40px;
     margin-top: 10px;
     border-left: 2px solid var(--border);
     padding-left: 15px;
 }
-
 .meta {
     font-size: 13px;
     color: var(--muted);
 }
-
 .author {
     color: var(--accent);
     font-weight: 700;
 }
-
 .action-link {
     color: var(--accent);
     text-decoration: none;
@@ -74,7 +65,6 @@
     font-weight: 600;
     cursor: pointer;
 }
-
 .delete-btn {
     background: none;
     border: 1px solid #ff4d4d;
@@ -84,7 +74,6 @@
     cursor: pointer;
     font-size: 12px;
 }
-
 .delete-btn:hover {
     background: #ff4d4d;
     color: white;
@@ -103,18 +92,16 @@
         <h1 style="margin:0;">{{ post.title }}</h1>
 
         <div style="display:flex; gap:12px; align-items:center;">
-
             <a href="{% url 'like_post' post.pk %}" class="action-link">
                 ▲ {{ post.total_likes }}
             </a>
 
             {% if post.author == user %}
-            <form method="POST" action="{% url 'delete_forum_post' post.pk %}" onsubmit="return confirm('Delete this post?')">
+            <form method="POST" action="{% url 'delete_forum_post' post.pk %}">
                 {% csrf_token %}
                 <button class="delete-btn">Delete</button>
             </form>
             {% endif %}
-
         </div>
     </div>
 
@@ -128,7 +115,7 @@
 
 </div>
 
-<h3>Comments ({{ post.comments.count }})</h3>
+<h3>Comments ({{ comments.count }})</h3>
 
 {% if user.is_authenticated %}
 <form method="POST">
@@ -148,32 +135,22 @@
 {% if not comment.parent %}
 <div class="comment">
 
-
     <div style="display:flex; justify-content:space-between;">
         <div>
             <span class="author">@{{ comment.author.username }}</span>
-
             {% if comment.author == post.author %}
             <span style="font-size:10px; background:var(--accent); padding:2px 6px; border-radius:4px;">OP</span>
             {% endif %}
         </div>
-
-        <span class="meta">
-            {{ comment.created|timesince }} ago
-        </span>
+        <span class="meta">{{ comment.created|timesince }} ago</span>
     </div>
-
 
     <div style="margin-top:10px;">
         {{ comment.content }}
     </div>
 
-
     <div style="margin-top:10px; display:flex; gap:12px; align-items:center;">
-
-        <span onclick="toggleReply('{{ comment.id }}')" class="action-link">
-            Reply
-        </span>
+        <span onclick="toggleReply('{{ comment.id }}')" class="action-link">Reply</span>
 
         {% if comment.replies.all %}
         <span onclick="toggleReplies('{{ comment.id }}')" class="action-link">
@@ -182,14 +159,13 @@
         {% endif %}
 
         {% if comment.author == user %}
-        <form method="POST" action="{% url 'delete-comment' comment.id %}">
+        <form method="POST" action="{% url 'delete-forum-comment' comment.id %}">
             {% csrf_token %}
             <button class="delete-btn">Delete</button>
         </form>
         {% endif %}
     </div>
 
-   
     <div id="reply-form-{{ comment.id }}" style="display:none; margin-top:10px;">
         <form method="POST" style="display:flex; gap:8px;">
             {% csrf_token %}
@@ -199,9 +175,7 @@
         </form>
     </div>
 
-    <!-- REPLIES -->
     <div id="replies-{{ comment.id }}" style="display:none;">
-
         {% for reply in comment.replies.all %}
         <div class="comment reply">
 
@@ -215,15 +189,13 @@
             </div>
 
             {% if reply.author == user %}
-            <form method="POST" action="{% url 'delete-comment' reply.id %}" style="margin-top:8px;">
+            <form method="POST" action="{% url 'delete-forum-comment' reply.id %}" style="margin-top:8px;">
                 {% csrf_token %}
                 <button class="delete-btn">Delete</button>
             </form>
             {% endif %}
-
         </div>
         {% endfor %}
-
     </div>
 
 </div>
@@ -241,7 +213,6 @@ function toggleReply(id) {
     const el = document.getElementById("reply-form-" + id);
     el.style.display = el.style.display === "none" ? "block" : "none";
 }
-
 function toggleReplies(id) {
     const el = document.getElementById("replies-" + id);
     el.style.display = el.style.display === "none" ? "block" : "none";

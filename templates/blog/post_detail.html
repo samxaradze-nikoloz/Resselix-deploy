@@ -8,7 +8,7 @@
 
   <div class="post-layout">
 
-    <!-- LEFT -->
+   
     <div class="post-left">
 
       <div class="post-image-box">
@@ -41,7 +41,7 @@
 
     </div>
 
-    <!-- RIGHT -->
+    
     <div class="post-right card-modern" style="padding:20px;">
 
       <h2 style="font-weight:800;">{{ object.title }}</h2>
@@ -57,10 +57,8 @@
 
       <hr>
 
-      <!-- SELLER CARD -->
       <div class="seller-mini-card">
 
-        <!-- FIXED URL NAME -->
         <a href="{% url 'public-profile' object.author.username %}" class="seller-mini">
 
           {% if object.author.profile.image %}
@@ -97,6 +95,14 @@
                 </button>
               {% endif %}
 
+              <a href="{% url 'report-user' object.author.username %}" class="btn-modern-logout" style="font-size:12px;padding:6px 10px;">
+                🚩 Report
+              </a>
+
+              <button class="btn-modern-save" style="font-size:12px;padding:6px 10px;" onclick="document.getElementById('comments').scrollIntoView({behavior:'smooth'})">
+                💬 Reply
+              </button>
+
             {% else %}
               <a href="{% url 'login' %}" class="btn-modern-save">
                 Login to Contact
@@ -105,6 +111,13 @@
 
           {% else %}
             <span style="color:var(--muted);">This is your listing</span>
+
+            <div style="margin-top:10px; display:flex; gap:8px;">
+              <button class="btn-modern-save" style="font-size:12px;padding:6px 10px;" onclick="document.getElementById('comments').scrollIntoView({behavior:'smooth'})">
+                💬 Reply
+              </button>
+            </div>
+
           {% endif %}
 
         </div>
@@ -125,7 +138,7 @@
   </div>
 </div>
 
-<!-- IMAGE MODAL -->
+
 <div id="imageModal" class="image-modal">
   <span class="close-modal" onclick="closeModal()">&times;</span>
   <button class="nav-btn left" onclick="prevImage()">❮</button>
@@ -141,7 +154,7 @@ let images = [
   {% for img in images %}
     {% if img.image %}"{{ img.image.url }}",{% endif %}
   {% endfor %}
-].filter(Boolean); // FIX: removes empty values
+].filter(Boolean); 
 
 let currentIndex = 0;
 

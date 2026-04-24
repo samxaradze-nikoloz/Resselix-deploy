@@ -6,7 +6,7 @@
 
     <div class="card-modern p-4" style="max-width:520px;margin:auto;">
 
-        <!-- TITLE -->
+       
         <h3 class="fw-bold text-center">Report User</h3>
 
         <p class="text-muted text-center mt-2">
@@ -15,11 +15,11 @@
 
         <hr>
 
-        <!-- FORM -->
+       
         <form method="POST">
             {% csrf_token %}
 
-            <!-- REASON -->
+            
             <label class="form-label mt-2">Reason</label>
             <select name="reason" class="form-control" required>
                 <option value="">Select reason</option>
@@ -30,14 +30,14 @@
                 <option value="other">Other</option>
             </select>
 
-            <!-- DETAILS -->
+           
             <label class="form-label mt-3">Details (optional)</label>
             <textarea name="message"
                       class="form-control"
                       rows="4"
                       placeholder="Explain what happened..."></textarea>
 
-            <!-- BUTTON -->
+            
             <button type="submit"
                     class="btn btn-danger w-100 mt-4 fw-bold">
                 🚨 Submit Report
@@ -45,7 +45,7 @@
 
         </form>
 
-        <!-- FOOT NOTE -->
+       
         <p class="text-muted text-center mt-3" style="font-size:13px;">
             Reports are reviewed by moderators. Abuse of this system may result in action.
         </p>

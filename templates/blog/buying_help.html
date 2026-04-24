@@ -11,7 +11,7 @@
     padding: 0 20px;
 }
 
-/* HEADER */
+
 .help-header {
     text-align: center;
     margin-bottom: 40px;
@@ -27,7 +27,7 @@
     color: var(--muted);
 }
 
-/* CARD */
+
 .help-card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -36,7 +36,7 @@
     margin-bottom: 25px;
 }
 
-/* STEPS */
+
 .step {
     display: flex;
     gap: 18px;
@@ -65,7 +65,7 @@
     font-size: 14px;
 }
 
-/* SAFETY GRID */
+
 .safety-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -97,7 +97,7 @@
     font-size: 13px;
 }
 
-/* TIP BOX */
+
 .tip-box {
     background: rgba(0,255,174,0.08);
     border: 1px solid rgba(0,255,174,0.3);
@@ -108,7 +108,7 @@
     color: var(--text);
 }
 
-/* LANGUAGE SWITCH */
+
 .lang-switch {
     display: flex;
     justify-content: flex-end;
@@ -128,7 +128,7 @@
 <div class="help-container">
 
 ```
-<!-- LANGUAGE SWITCH -->
+
 <div class="lang-switch">
     <form action="{% url 'set_language' %}" method="post">
         {% csrf_token %}
@@ -139,13 +139,13 @@
     </form>
 </div>
 
-<!-- HEADER -->
+
 <div class="help-header">
     <h1>{% trans "Buying on Resselix" %}</h1>
     <p>{% trans "Everything you need to know to shop safely and confidently" %}</p>
 </div>
 
-<!-- HOW IT WORKS -->
+
 <div class="help-card">
     <h3>{% trans "How It Works" %}</h3>
 

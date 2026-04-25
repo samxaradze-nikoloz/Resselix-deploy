@@ -144,6 +144,8 @@ class PostDetailView(DetailView):
             comment.save()
 
         return redirect('post-detail', pk=self.object.pk)
+from django.urls import reverse
+
 class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Post
     form_class = PostForm
@@ -152,6 +154,9 @@ class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     def form_valid(self, form):
         form.instance.author = self.request.user
         return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('post-manage', kwargs={'pk': self.object.pk})
 
     def test_func(self):
         post = self.get_object()
@@ -190,6 +195,35 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     def test_func(self):
         return self.request.user == self.get_object().author
 
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import ListView
+from .models import Post
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from .models import Post
+
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import ListView
+from .models import Post
+
+class MyListingsView(LoginRequiredMixin, ListView):
+    model = Post
+    template_name = "blog/profile.html"   
+    context_object_name = "listings"
+
+    def get_queryset(self):
+        return Post.objects.filter(author=self.request.user).select_related(
+            'author__profile'
+        ).prefetch_related('images').order_by('-date_posted')
+
+@login_required
+def manage_post(request, pk):
+    post = get_object_or_404(Post, pk=pk)
+
+    if post.author != request.user:
+        return redirect('blog-home')
+
+    return render(request, 'blog/manage_post.html', {'post': post})
 
 
 @login_required

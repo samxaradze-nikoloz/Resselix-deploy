@@ -11,7 +11,7 @@ urlpatterns = [
     path('post/new/', views.PostCreateView.as_view(), name='post-create'),
     path('post/<int:pk>/update/', views.PostUpdateView.as_view(), name='post-update'),
     path('post/<int:pk>/delete/', views.PostDeleteView.as_view(), name='post-delete'),
-
+    path('post/<int:pk>/manage/', views.manage_post, name='post-manage'),
     path('user/<str:username>/', views.UserPostListView.as_view(), name='user-posts'),
 
     path('live-search/', views.live_search, name='live-search'),
@@ -34,7 +34,7 @@ urlpatterns = [
     path('forum/like/<int:pk>/', views.like_post, name='like_post'),
     path('forum/search/', views.forum_search, name='forum_search'),
     path('forum/post/<int:pk>/delete/', views.delete_forum_post, name='delete_forum_post'),
-
+    path('my-listings/', MyListingsView.as_view(), name='my-listings'),
     path('how-to-sell/', views.how_to_sell, name='how_to_sell'),
     path('contact/', views.contact_us, name='contact'),
     path('help/buying/', views.buying_help, name='buying-help'),

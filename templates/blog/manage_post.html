@@ -1,0 +1,211 @@
+{% extends "blog/base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="manage-container">
+
+  <div class="manage-top">
+    <h2>Manage Listing</h2>
+    <a href="{% url 'profile' %}" class="manage-back">← Dashboard</a>
+  </div>
+
+  <div class="manage-card">
+
+    <div class="manage-left">
+      {% if post.images.all %}
+        <img class="manage-main-img" src="{{ post.images.first.image.url }}">
+      {% else %}
+        <img class="manage-main-img" src="/static/default.jpg">
+      {% endif %}
+
+      <div class="manage-gallery">
+        {% for img in post.images.all %}
+          <img src="{{ img.image.url }}">
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="manage-right">
+
+      <h1 class="manage-title">{{ post.title }}</h1>
+
+      <div class="manage-price">{{ post.price }} ₾</div>
+
+      <div class="manage-meta">
+        <span>Views: {{ post.views }}</span>
+        <span>Posted: {{ post.date_posted|date:"M d, Y" }}</span>
+        {% if post.is_sold %}
+          <span class="status sold">Sold</span>
+        {% else %}
+          <span class="status active">Active</span>
+        {% endif %}
+      </div>
+
+      <div class="manage-desc">
+        {{ post.content }}
+      </div>
+
+      <div class="manage-actions">
+        <a href="{% url 'post-update' post.pk %}" class="manage-btn edit">Edit Listing</a>
+        <form method="POST" action="{% url 'post-delete' post.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="manage-btn delete">Delete Listing</button>
+        </form>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<style>
+.manage-container {
+  max-width: 1000px;
+  margin: auto;
+  padding: 20px;
+}
+
+.manage-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.manage-back {
+  text-decoration: none;
+  color: #111;
+  border: 1px solid #ddd;
+  padding: 6px 12px;
+  border-radius: 8px;
+  transition: 0.2s;
+}
+
+.manage-back:hover {
+  background: #111;
+  color: #fff;
+}
+
+.manage-card {
+  display: flex;
+  gap: 20px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 20px;
+  background: #fff;
+}
+
+.manage-left {
+  flex: 1;
+}
+
+.manage-main-img {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+}
+
+.manage-gallery {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.manage-gallery img {
+  width: 70px;
+  height: 70px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.manage-gallery img:hover {
+  transform: scale(1.05);
+}
+
+.manage-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.manage-title {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.manage-price {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.manage-meta {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 15px;
+  display: flex;
+  gap: 15px;
+}
+
+.status {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.status.active {
+  background: #00ffae;
+  color: #000;
+}
+
+.status.sold {
+  background: #ff4d4d;
+  color: #fff;
+}
+
+.manage-desc {
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.manage-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.manage-btn {
+  padding: 10px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: 0.2s;
+  font-size: 14px;
+}
+
+.manage-btn.edit {
+  border: 1px solid #111;
+  color: #111;
+}
+
+.manage-btn.edit:hover {
+  background: #111;
+  color: #fff;
+}
+
+.manage-btn.delete {
+  border: 1px solid #ff4d4d;
+  color: #ff4d4d;
+  background: none;
+}
+
+.manage-btn.delete:hover {
+  background: #ff4d4d;
+  color: #fff;
+}
+</style>
+
+{% endblock %}

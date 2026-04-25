@@ -45,8 +45,9 @@
   <div class="dash-grid">
 
     {% for post in listings %}
-    <a href="{% url 'post-manage' post.pk %}" class="dash-card-link">
-      <div class="dash-card">
+    <div class="dash-card">
+
+      <a href="{% url 'post-manage' post.pk %}" class="dash-card-link">
 
         <div class="dash-image">
           {% if post.images.all %}
@@ -61,8 +62,19 @@
           <p class="dash-price">{{ post.price }} ₾</p>
         </div>
 
+      </a>
+
+      <div class="dash-card-actions">
+
+        <a href="{% url 'post-edit' post.pk %}" class="dash-edit-btn">Edit</a>
+
+        <button type="button" class="dash-delete-btn" onclick="openDeleteModal({{ post.pk }})">
+          Delete
+        </button>
+
       </div>
-    </a>
+
+    </div>
     {% empty %}
       <p class="dash-empty">No listings created yet</p>
     {% endfor %}
@@ -134,6 +146,27 @@
 
 </div>
 
+<div id="deleteModal" class="logout-modal">
+
+  <div class="logout-box">
+
+    <h3>Are you sure you want to delete this post?</h3>
+
+    <div class="logout-actions">
+
+      <form method="POST" id="deleteForm">
+        {% csrf_token %}
+        <button type="submit" class="logout-confirm">Yes, Delete</button>
+      </form>
+
+      <button type="button" class="logout-cancel" onclick="closeDeleteModal()">Cancel</button>
+
+    </div>
+
+  </div>
+
+</div>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
@@ -141,6 +174,9 @@
 
 let modal = document.getElementById("settingsModal");
 let logoutModal = document.getElementById("logoutModal");
+let deleteModal = document.getElementById("deleteModal");
+let deleteForm = document.getElementById("deleteForm");
+
 let map;
 let marker;
 
@@ -150,6 +186,15 @@ function openLogout() {
 
 function closeLogout() {
   logoutModal.style.display = "none";
+}
+
+function openDeleteModal(postId) {
+  deleteModal.style.display = "flex";
+  deleteForm.action = "/post/" + postId + "/delete/";
+}
+
+function closeDeleteModal() {
+  deleteModal.style.display = "none";
 }
 
 function initMap() {
@@ -228,6 +273,7 @@ document.getElementById("closeSettings").onclick = function () {
 window.onclick = function (e) {
   if (e.target == modal) modal.style.display = "none";
   if (e.target == logoutModal) logoutModal.style.display = "none";
+  if (e.target == deleteModal) deleteModal.style.display = "none";
 };
 
 const themeBtn = document.getElementById("themeToggle");

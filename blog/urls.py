@@ -1,6 +1,6 @@
 from django.urls import include, path
 from . import views
-from .views import PostListView, MyListingsView
+from .views import ImageUploadView, PostListView, MyListingsView, PostUpdateView,ImageDeleteView, PostDeleteView
 
 urlpatterns = [
     path('', PostListView.as_view(), name='blog-home'),
@@ -13,7 +13,7 @@ urlpatterns = [
     path('post/<int:pk>/delete/', views.PostDeleteView.as_view(), name='post-delete'),
     path('post/<int:pk>/manage/', views.manage_post, name='post-manage'),
     path('user/<str:username>/', views.UserPostListView.as_view(), name='user-posts'),
-
+ path('post/<int:pk>/edit/', PostUpdateView.as_view(), name='post-edit'),
     path('live-search/', views.live_search, name='live-search'),
 
     path('cart/', views.cart_detail, name='cart-detail'),
@@ -40,8 +40,10 @@ urlpatterns = [
     path('help/buying/', views.buying_help, name='buying-help'),
     path('company-info/', views.company_info, name='company-info'),
     path('news/', views.news_updates, name='news'),
+    path('post/<int:pk>/delete/', PostDeleteView.as_view(), name='post-delete'),
+path('image/<int:pk>/delete/', ImageDeleteView.as_view(), name='image-delete'),
+path('post/<int:pk>/image-upload/', ImageUploadView.as_view(), name='image-upload'),
 
-    
     path('forum/comment/<int:pk>/delete/', views.delete_forum_comment, name='delete-forum-comment'),
 
     path('i18n/', include('django.conf.urls.i18n')),

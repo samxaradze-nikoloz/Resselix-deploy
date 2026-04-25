@@ -9,7 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.db.models import Q
-
+from django.urls import reverse_lazy
 from .models import (
     Post,
     ForumPost,
@@ -149,7 +149,7 @@ from django.urls import reverse
 class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Post
     form_class = PostForm
-    template_name = 'blog/post_form.html'
+    template_name = 'blog/post_update.html'
 
     def form_valid(self, form):
         form.instance.author = self.request.user
@@ -190,7 +190,7 @@ class PostCreateView(LoginRequiredMixin, CreateView):
 
 class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Post
-    success_url = '/'
+    success_url = reverse_lazy('profile')
 
     def test_func(self):
         return self.request.user == self.get_object().author
@@ -492,3 +492,33 @@ def delete_forum_post(request, pk):
         post.delete()
         return redirect('forum_home')
     return redirect('forum-post-detail', pk=pk)
+
+
+class ImageUploadView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+    model = PostImage
+    fields = ['image']
+
+    def form_valid(self, form):
+        post = get_object_or_404(Post, pk=self.kwargs['pk'])
+        form.instance.post = post
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('post-manage', kwargs={'pk': self.kwargs['pk']})
+
+    def test_func(self):
+        post = get_object_or_404(Post, pk=self.kwargs['pk'])
+        return self.request.user == post.author
+
+
+
+
+
+class ImageDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = PostImage
+
+    def get_success_url(self):
+        return reverse_lazy('post-manage', kwargs={'pk': self.object.post.pk})
+
+    def test_func(self):
+        return self.request.user == self.get_object().post.author

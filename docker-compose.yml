@@ -6,33 +6,49 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     environment:
-
       - POSTGRES_DB=resselix_db
       - POSTGRES_USER=resselix_admin
-      - POSTGRES_PASSWORD=your_secure_password_here 
+      - POSTGRES_PASSWORD=your_secure_password_here
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U resselix_admin -d resselix_db"]
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: always
 
   web:
     build: .
-
-    command: python manage.py runserver 0.0.0.0:8000
+    command: gunicorn blogPost_app.wsgi:application --bind 0.0.0.0:8000 --workers 3
     volumes:
-      - .:/code
-    ports:
-      - "8000:8000"
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    expose:
+      - "8000"          # internal only, Nginx talks to this
+    env_file: .env
     environment:
-      - DB_NAME=resselix_db
-      - DB_USER=resselix_admin
-      - DB_PASS=your_secure_password_here
+      - POSTGRES_DB=resselix_db
+      - POSTGRES_USER=resselix_admin
+      - POSTGRES_PASSWORD=your_secure_password_here
       - DB_HOST=db
       - DB_PORT=5432
     depends_on:
       db:
         condition: service_healthy
+    restart: always
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"         # only Nginx is exposed to the outside
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    depends_on:
+      - web
+    restart: always
 
 volumes:
   postgres_data:
+  static_volume:
+  media_volume:

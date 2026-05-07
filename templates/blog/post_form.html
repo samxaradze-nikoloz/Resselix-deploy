@@ -6,130 +6,578 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"/>
 
 <style>
-.site-container { padding:20px; }
-.card-modern { background:#fff; border-radius:14px; box-shadow:0 10px 25px rgba(0,0,0,0.08); max-width:850px; margin:auto; padding:25px; }
-label { font-weight:600; display:block; margin-bottom:6px; }
-input, select, textarea { width:100%; padding:10px; border-radius:10px; border:1px solid #ddd; outline:none; }
-input:focus, select:focus, textarea:focus { border-color:#111; }
-.row-flex { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:10px; }
-.btn { padding:10px 12px; border-radius:10px; border:none; cursor:pointer; font-weight:600; }
-.btn-dark { background:#111; color:#fff; }
-.btn-light { background:#eee; }
-.map-box { height:320px; border-radius:12px; overflow:hidden; margin-top:10px; display:none; }
-.preview-main { width:140px; height:140px; object-fit:cover; border-radius:12px; border:2px solid #ddd; margin-top:10px; }
-.preview-img { width:90px; height:90px; object-fit:cover; border-radius:10px; border:2px solid #eee; }
-.preview-grid { display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; }
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  .cl-page {
+    min-height: 100vh;
+    background: #f5f4f0;
+    padding: 40px 16px 80px;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .cl-header {
+    max-width: 720px;
+    margin: 0 auto 32px;
+  }
+
+  .cl-header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 32px;
+    font-weight: 400;
+    color: #111;
+    letter-spacing: -0.5px;
+  }
+
+  .cl-header p {
+    color: #666;
+    font-size: 15px;
+    margin-top: 6px;
+  }
+
+  .cl-card {
+    max-width: 720px;
+    margin: 0 auto 20px;
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #e8e6e0;
+    overflow: hidden;
+  }
+
+  .cl-card-header {
+    padding: 18px 24px 16px;
+    border-bottom: 1px solid #f0ede8;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .cl-card-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: #111;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+
+  .cl-card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+
+  .cl-card-body { padding: 24px; }
+
+  .cl-field { margin-bottom: 20px; }
+  .cl-field:last-child { margin-bottom: 0; }
+
+  .cl-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #444;
+    margin-bottom: 7px;
+    letter-spacing: 0.2px;
+  }
+
+  .cl-label span {
+    color: #e04040;
+    margin-left: 2px;
+  }
+
+  .cl-label .optional {
+    color: #999;
+    font-weight: 400;
+    margin-left: 4px;
+  }
+
+  .cl-input, .cl-textarea, .cl-select {
+    width: 100%;
+    padding: 11px 14px;
+    border-radius: 10px;
+    border: 1.5px solid #e0ddd8;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    color: #111;
+    background: #fafaf8;
+    transition: border-color 0.15s, background 0.15s;
+    outline: none;
+    appearance: none;
+  }
+
+  .cl-input:focus, .cl-textarea:focus, .cl-select:focus {
+    border-color: #111;
+    background: #fff;
+  }
+
+  .cl-textarea { resize: vertical; min-height: 110px; line-height: 1.6; }
+
+  .cl-select-wrap { position: relative; }
+  .cl-select-wrap::after {
+    content: '';
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0; height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid #888;
+    pointer-events: none;
+  }
+
+  .cl-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 540px) { .cl-row { grid-template-columns: 1fr; } }
+
+  .cl-price-wrap { position: relative; }
+  .cl-price-wrap .currency {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 15px;
+    color: #888;
+    pointer-events: none;
+  }
+  .cl-price-wrap .cl-input { padding-left: 28px; }
+
+  /* Image upload */
+  .cl-upload-zone {
+    border: 2px dashed #d8d5cf;
+    border-radius: 12px;
+    padding: 28px 20px;
+    text-align: center;
+    background: #fafaf8;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    position: relative;
+  }
+  .cl-upload-zone:hover { border-color: #111; background: #f5f4f0; }
+  .cl-upload-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+  .cl-upload-icon { font-size: 28px; margin-bottom: 8px; color: #bbb; }
+  .cl-upload-zone p { font-size: 14px; color: #888; line-height: 1.5; }
+  .cl-upload-zone strong { color: #444; }
+
+  .cl-preview-main {
+    margin-top: 14px;
+    display: none;
+    position: relative;
+    width: fit-content;
+  }
+  .cl-preview-main img {
+    width: 120px; height: 120px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 2px solid #e0ddd8;
+    display: block;
+  }
+  .cl-preview-main .remove-btn {
+    position: absolute;
+    top: -8px; right: -8px;
+    width: 22px; height: 22px;
+    background: #e04040;
+    border: none;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    line-height: 1;
+  }
+
+  .cl-extra-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .cl-extra-preview .thumb {
+    width: 80px; height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1.5px solid #e0ddd8;
+  }
+
+  /* Location */
+  .cl-location-btns {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+
+  .cl-btn-loc {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 16px;
+    border-radius: 10px;
+    border: 1.5px solid #e0ddd8;
+    background: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .cl-btn-loc:hover { border-color: #111; background: #f5f4f0; }
+  .cl-btn-loc.active { border-color: #111; background: #111; color: #fff; }
+  .cl-btn-loc svg { flex-shrink: 0; }
+
+  .cl-map-wrap {
+    display: none;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1.5px solid #e0ddd8;
+    margin-top: 4px;
+  }
+  .cl-map-wrap.visible { display: block; }
+  #map { height: 300px; }
+
+  .cl-location-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: #f0f7ee;
+    border: 1px solid #c8e0c4;
+    color: #2d6b28;
+    font-size: 13px;
+    margin-top: 10px;
+    display: none;
+  }
+  .cl-location-status.visible { display: flex; }
+
+  /* Submit */
+  .cl-submit-wrap { max-width: 720px; margin: 0 auto; }
+
+  .cl-submit-btn {
+    width: 100%;
+    padding: 15px;
+    background: #111;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    letter-spacing: 0.2px;
+  }
+  .cl-submit-btn:hover { background: #2a2a2a; }
+  .cl-submit-btn:active { transform: scale(0.99); }
+
+  .cl-submit-note {
+    text-align: center;
+    font-size: 13px;
+    color: #999;
+    margin-top: 10px;
+  }
+
+  /* Django form field overrides */
+  .cl-card-body input[type="text"],
+  .cl-card-body input[type="number"],
+  .cl-card-body textarea,
+  .cl-card-body select {
+    width: 100%;
+    padding: 11px 14px;
+    border-radius: 10px;
+    border: 1.5px solid #e0ddd8;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    color: #111;
+    background: #fafaf8;
+    transition: border-color 0.15s;
+    outline: none;
+    appearance: none;
+  }
+  .cl-card-body input[type="text"]:focus,
+  .cl-card-body input[type="number"]:focus,
+  .cl-card-body textarea:focus,
+  .cl-card-body select:focus {
+    border-color: #111;
+    background: #fff;
+  }
 </style>
 
-<div class="site-container">
-  <div class="card-modern">
+<div class="cl-page">
 
-    <h2 style="font-weight:800; margin-bottom:20px;">Create New Listing</h2>
-
-    <form method="POST" enctype="multipart/form-data">
-      {% csrf_token %}
-
-      <div style="margin-bottom:12px;">
-        <label>Title</label>
-        {{ form.title }}
-      </div>
-
-      <div style="margin-bottom:12px;">
-        <label>Price</label>
-        {{ form.price }}
-      </div>
-
-      <div style="margin-bottom:12px;">
-        <label>Description</label>
-        {{ form.content }}
-      </div>
-
-      <div style="margin-bottom:12px;">
-        <label>Category</label>
-        <select name="category" id="id_category" required>
-          <option value="">Select category</option>
-          {% for value, label in form.fields.category.choices %}
-            {% if value %}<option value="{{ value }}">{{ label }}</option>{% endif %}
-          {% endfor %}
-        </select>
-      </div>
-
-      <div style="margin-bottom:12px;">
-        <label>Subcategory</label>
-        <select name="subcategory" id="id_subcategory" required>
-          <option value="">Select subcategory</option>
-        </select>
-      </div>
-
-      <div style="margin-bottom:12px;">
-        <label>Main Image</label>
-        <input type="file" id="mainImage" name="main_image" accept="image/*" required>
-        <div id="mainPreview"></div>
-      </div>
-
-      <div style="margin-bottom:12px;">
-        <label>Extra Images</label>
-        <input type="file" id="extraImages" name="images" multiple accept="image/*">
-        <div class="preview-grid" id="extraPreview"></div>
-      </div>
-
-      <div style="margin-bottom:12px;">
-        <label>Address</label>
-        {{ form.address }}
-      </div>
-
-      <div class="row-flex">
-        <button type="button" class="btn btn-dark" id="useMyLocation">📍 Use My Location</button>
-        <button type="button" class="btn btn-light" id="customLocationBtn">🗺️ Open Map</button>
-      </div>
-
-      <div id="map" class="map-box"></div>
-
-      {{ form.latitude }}
-      {{ form.longitude }}
-
-      <button type="submit" class="btn btn-dark" style="width:100%; margin-top:15px;">
-        🚀 Post Listing
-      </button>
-
-    </form>
+  <div class="cl-header">
+    <h1>Create a listing</h1>
+    <p>Fill in the details below and your item will be live instantly.</p>
   </div>
+
+  <form method="POST" enctype="multipart/form-data" id="listingForm">
+    {% csrf_token %}
+
+    <!-- Basic Info -->
+    <div class="cl-card">
+      <div class="cl-card-header">
+        <div class="cl-card-icon">✦</div>
+        <span class="cl-card-title">Basic Info</span>
+      </div>
+      <div class="cl-card-body">
+
+        <div class="cl-field">
+          <label class="cl-label">Title <span>*</span></label>
+          {{ form.title }}
+        </div>
+
+        <div class="cl-field">
+          <label class="cl-label">Description <span>*</span></label>
+          {{ form.content }}
+        </div>
+
+        <div class="cl-field">
+          <label class="cl-label">Price <span>*</span></label>
+          <div class="cl-price-wrap">
+            <span class="currency">₾</span>
+            {{ form.price }}
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Category -->
+    <div class="cl-card">
+      <div class="cl-card-header">
+        <div class="cl-card-icon">◈</div>
+        <span class="cl-card-title">Category</span>
+      </div>
+      <div class="cl-card-body">
+
+        <div class="cl-row">
+          <div class="cl-field">
+            <label class="cl-label">Category <span>*</span></label>
+            <div class="cl-select-wrap">
+              <select name="category" id="id_category" class="cl-select" required>
+                <option value="">Select category</option>
+                {% for value, label in form.fields.category.choices %}
+                  {% if value %}<option value="{{ value }}">{{ label }}</option>{% endif %}
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <div class="cl-field">
+            <label class="cl-label">Subcategory <span class="optional">(optional)</span></label>
+            <div class="cl-select-wrap">
+              <select name="subcategory" id="id_subcategory" class="cl-select">
+                <option value="">Select subcategory</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Photos -->
+    <div class="cl-card">
+      <div class="cl-card-header">
+        <div class="cl-card-icon">⬡</div>
+        <span class="cl-card-title">Photos</span>
+      </div>
+      <div class="cl-card-body">
+
+        <div class="cl-field">
+          <label class="cl-label">Main Photo <span>*</span></label>
+          <div class="cl-upload-zone" id="mainUploadZone">
+            <input type="file" id="mainImage" name="main_image" accept="image/*" required>
+            <div class="cl-upload-icon">⬆</div>
+            <p><strong>Click to upload</strong> or drag & drop<br>JPG, PNG, WEBP — max 10MB</p>
+          </div>
+          <div class="cl-preview-main" id="mainPreview">
+            <img id="mainPreviewImg" src="" alt="Preview">
+            <button type="button" class="remove-btn" id="removeMain">✕</button>
+          </div>
+        </div>
+
+        <div class="cl-field">
+          <label class="cl-label">Extra Photos <span class="optional">(up to 5)</span></label>
+          <div class="cl-upload-zone">
+            <input type="file" id="extraImages" name="images" multiple accept="image/*">
+            <div class="cl-upload-icon">⬆</div>
+            <p><strong>Click to upload</strong> multiple photos<br>These appear in the listing gallery</p>
+          </div>
+          <div class="cl-extra-preview" id="extraPreview"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Location -->
+    <div class="cl-card">
+      <div class="cl-card-header">
+        <div class="cl-card-icon">◎</div>
+        <span class="cl-card-title">Location <span style="font-size:11px; font-weight:400; color:#999; text-transform:none; letter-spacing:0; margin-left:4px;">optional</span></span>
+      </div>
+      <div class="cl-card-body">
+
+        <div class="cl-field">
+          <label class="cl-label">Address</label>
+          {{ form.address }}
+        </div>
+
+        <div class="cl-location-btns">
+          <button type="button" class="cl-btn-loc" id="useMyLocation">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+            Use my location
+          </button>
+          <button type="button" class="cl-btn-loc" id="openMapBtn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 10c0 6-9 13-9 13S3 16 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Pick on map
+          </button>
+        </div>
+
+        <div class="cl-map-wrap" id="mapWrap">
+          <div id="map"></div>
+        </div>
+
+        <div class="cl-location-status" id="locationStatus">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <span id="locationStatusText">Location set</span>
+        </div>
+
+        {{ form.latitude }}
+        {{ form.longitude }}
+
+      </div>
+    </div>
+
+    <div class="cl-submit-wrap">
+      <button type="submit" class="cl-submit-btn">Post Listing →</button>
+      <p class="cl-submit-note">Your listing will be visible to buyers immediately.</p>
+    </div>
+
+  </form>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
 <script>
-let mapVisible = false;
-let map;
-let marker;
+// --- Subcategory map ---
+const subcategories = {
+  electronics: [["phones","Phones"],["laptops","Laptops"],["tech_accessories","Tech Accessories"]],
+  fashion: [["men","Men Fashion"],["women","Women Fashion"],["shoes","Shoes"]],
+  sports: [["winter_sports","Winter Sports"],["football","Football"],["basketball","Basketball"],["gym","Gym / Fitness"]],
+  home: [["furniture","Furniture"],["decor","Decorations"]],
+  accessories: [["phone_cases","Phone Cases"],["watches","Watches"],["bags","Bags"],["jewelry","Jewelry"]],
+  accounts: [["steam","Steam"],["epic","Epic Games"],["riot","Riot Games"],["psn","PlayStation"],["xbox","Xbox"]],
+  misc: []
+};
 
-function initMap() {
-  if (map) return;
+document.getElementById("id_category").addEventListener("change", function () {
+  const sub = document.getElementById("id_subcategory");
+  sub.innerHTML = "<option value=''>Select subcategory</option>";
+  (subcategories[this.value] || []).forEach(([val, label]) => {
+    const o = document.createElement("option");
+    o.value = val; o.textContent = label;
+    sub.appendChild(o);
+  });
+});
 
-  let lat = 41.7151;
-  let lng = 44.8271;
+// --- Main image preview ---
+const mainInput = document.getElementById("mainImage");
+const mainPreview = document.getElementById("mainPreview");
+const mainPreviewImg = document.getElementById("mainPreviewImg");
+const mainZone = document.getElementById("mainUploadZone");
 
-  map = L.map('map').setView([lat, lng], 13);
+mainInput.addEventListener("change", function () {
+  const file = this.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    mainPreviewImg.src = e.target.result;
+    mainPreview.style.display = "block";
+    mainZone.style.display = "none";
+  };
+  reader.readAsDataURL(file);
+});
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+document.getElementById("removeMain").addEventListener("click", function () {
+  mainInput.value = "";
+  mainPreview.style.display = "none";
+  mainZone.style.display = "block";
+});
 
-  marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+// --- Extra images preview ---
+document.getElementById("extraImages").addEventListener("change", function () {
+  const box = document.getElementById("extraPreview");
+  box.innerHTML = "";
+  Array.from(this.files).slice(0, 5).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = document.createElement("img");
+      img.src = e.target.result;
+      img.className = "thumb";
+      box.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+  });
+});
 
-  const latInput = document.getElementById("id_latitude");
-  const lngInput = document.getElementById("id_longitude");
-  const addrInput = document.querySelector("input[name='address']");
+// --- Map ---
+let map = null;
+let marker = null;
+let mapOpen = false;
 
-  function setLocation(lat, lng) {
-    latInput.value = lat;
-    lngInput.value = lng;
+const latInput = document.getElementById("id_latitude");
+const lngInput = document.getElementById("id_longitude");
+const addrInput = document.querySelector("input[name='address']");
+const mapWrap = document.getElementById("mapWrap");
+const locationStatus = document.getElementById("locationStatus");
+const locationStatusText = document.getElementById("locationStatusText");
 
+function setLocation(lat, lng, label) {
+  latInput.value = lat.toFixed(6);
+  lngInput.value = lng.toFixed(6);
+  locationStatus.classList.add("visible");
+  if (label) {
+    locationStatusText.textContent = label;
+    if (addrInput) addrInput.value = label;
+  } else {
     fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
       .then(r => r.json())
       .then(data => {
-        if (data.display_name) addrInput.value = data.display_name;
+        const name = data.display_name || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+        locationStatusText.textContent = name;
+        if (addrInput) addrInput.value = name;
+      })
+      .catch(() => {
+        locationStatusText.textContent = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
       });
   }
+}
+
+function initMap(lat, lng) {
+  if (map) return;
+  map = L.map('map').setView([lat, lng], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
+
+  marker = L.marker([lat, lng], { draggable: true }).addTo(map);
 
   marker.on("dragend", e => {
     const p = e.target.getLatLng();
@@ -141,109 +589,73 @@ function initMap() {
     setLocation(e.latlng.lat, e.latlng.lng);
   });
 
-  L.Control.geocoder({
-    defaultMarkGeocode: false,
-    geocoder: L.Control.Geocoder.nominatim({
-      geocodingQueryParams: { limit: 6, addressdetails: 1 }
-    })
-  })
-  .on("markgeocode", function(e) {
-    const c = e.geocode.center;
-    marker.setLatLng(c);
-    map.setView(c, 15);
-    setLocation(c.lat, c.lng);
-  })
-  .addTo(map);
+  if (L.Control.Geocoder) {
+    L.Control.geocoder({
+      defaultMarkGeocode: false,
+      placeholder: 'Search address...',
+      geocoder: L.Control.Geocoder.nominatim()
+    }).on("markgeocode", function (e) {
+      const c = e.geocode.center;
+      marker.setLatLng(c);
+      map.setView(c, 15);
+      setLocation(c.lat, c.lng, e.geocode.name);
+    }).addTo(map);
+  }
 }
 
-document.getElementById("customLocationBtn").onclick = function () {
-  document.getElementById("map").style.display = "block";
-  if (!mapVisible) {
+function openMap(lat, lng) {
+  mapWrap.classList.add("visible");
+  document.getElementById("openMapBtn").classList.add("active");
+  if (!mapOpen) {
+    mapOpen = true;
     setTimeout(() => {
-      initMap();
+      initMap(lat, lng);
       map.invalidateSize();
-    }, 200);
-    mapVisible = true;
-  }
-};
-
-document.getElementById("useMyLocation").onclick = function () {
-  document.getElementById("map").style.display = "block";
-  if (!mapVisible) {
-    setTimeout(() => {
-      initMap();
-      map.invalidateSize();
-    }, 200);
-    mapVisible = true;
-  }
-
-  navigator.geolocation.getCurrentPosition(pos => {
-    const lat = pos.coords.latitude;
-    const lng = pos.coords.longitude;
-
+    }, 250);
+  } else if (marker) {
     marker.setLatLng([lat, lng]);
     map.setView([lat, lng], 15);
+  }
+}
 
-    document.getElementById("id_latitude").value = lat;
-    document.getElementById("id_longitude").value = lng;
-
-    const addrInput = document.querySelector("input[name='address']");
-
-    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
-      .then(r => r.json())
-      .then(data => {
-        if (data.display_name) addrInput.value = data.display_name;
-      });
-  });
-};
-
-document.getElementById("mainImage").addEventListener("change", function(){
-  const file = this.files[0];
-  if(!file) return;
-
-  const reader = new FileReader();
-  reader.onload = e => {
-    document.getElementById("mainPreview").innerHTML =
-      `<img src="${e.target.result}" class="preview-main">`;
-  };
-  reader.readAsDataURL(file);
+document.getElementById("openMapBtn").addEventListener("click", function () {
+  if (mapWrap.classList.contains("visible")) {
+    mapWrap.classList.remove("visible");
+    this.classList.remove("active");
+  } else {
+    openMap(41.7151, 44.8271);
+  }
 });
 
-document.getElementById("extraImages").addEventListener("change", function(){
-  const box = document.getElementById("extraPreview");
-  box.innerHTML = "";
+document.getElementById("useMyLocation").addEventListener("click", function () {
+  const btn = this;
+  btn.textContent = "Locating...";
+  btn.disabled = true;
 
-  Array.from(this.files).forEach(file=>{
-    const reader = new FileReader();
-    reader.onload = e=>{
-      const img = document.createElement("img");
-      img.src = e.target.result;
-      img.className = "preview-img";
-      box.appendChild(img);
-    };
-    reader.readAsDataURL(file);
-  });
-});
+  if (!navigator.geolocation) {
+    alert("Geolocation is not supported by your browser.");
+    btn.textContent = "Use my location";
+    btn.disabled = false;
+    return;
+  }
 
-const subcategories = {
-  electronics: [["phones","Phones"],["laptops","Laptops"],["tech_accessories","Tech Accessories"]],
-  fashion: [["men","Men Fashion"],["women","Women Fashion"],["shoes","Shoes"]],
-  sports: [["winter_sports","Winter Sports"],["football","Football"],["basketball","Basketball"],["gym","Gym"]],
-  home: [["furniture","Furniture"],["decor","Decor"]],
-  accessories: [["phone_cases","Phone Cases"],["watches","Watches"],["bags","Bags"],["jewelry","Jewelry"]],
-  accounts: [["steam","Steam"],["epic","Epic"],["riot","Riot"],["psn","PSN"],["xbox","Xbox"]],
-  misc: []
-};
-
-document.getElementById("id_category").addEventListener("change", function(){
-  const sub = document.getElementById("id_subcategory");
-  sub.innerHTML = "<option value=''>Select subcategory</option>";
-  (subcategories[this.value] || []).forEach(p=>{
-    const opt = document.createElement("option");
-    opt.value = p[0];
-    opt.textContent = p[1];
-    sub.appendChild(opt);
-  });
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      openMap(lat, lng);
+      setLocation(lat, lng);
+      btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Location found`;
+      btn.disabled = false;
+    },
+    err => {
+      alert("Could not get your location. Please pick it on the map.");
+      btn.textContent = "Use my location";
+      btn.disabled = false;
+      openMap(41.7151, 44.8271);
+    },
+    { timeout: 8000 }
+  );
 });
 </script>
 

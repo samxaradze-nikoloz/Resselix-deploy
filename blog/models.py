@@ -29,7 +29,7 @@ class Post(models.Model):
     content = models.TextField()
     date_posted = models.DateTimeField(default=timezone.now)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
-    price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     category = models.CharField(max_length=30, choices=MAIN_CATEGORY_CHOICES, default='misc')
     subcategory = models.CharField(max_length=30, choices=SUBCATEGORY_CHOICES, blank=True, null=True)
     is_sold = models.BooleanField(default=False)

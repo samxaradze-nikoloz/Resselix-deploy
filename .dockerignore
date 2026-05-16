@@ -10,4 +10,4 @@ env
 node_modules
 staticfiles
 media
-db.sqlite3
+db.sqlite3mk
